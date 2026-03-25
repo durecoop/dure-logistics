@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>두레생협 화성물류센터</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --green-primary: #3a7d44;
+    --green-dark: #1a5c2e;
+    --green-light: #6abf69;
+    --orange: #e8751a;
+    --orange-light: #ff9a3c;
+    --white: #ffffff;
+    --dark: #1a1a1a;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+    width: 100vw; height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══ GLOBAL PROGRESS ═══ */
+  #progress {
+    position: fixed; top:0; left:0; height:4px; z-index:9999;
+    background: linear-gradient(90deg, var(--green-light), var(--orange));
+    transition: width .4s ease;
+    box-shadow: 0 0 12px rgba(106,191,105,.5);
+  }
+
+  /* ═══ SLIDE ENGINE ═══ */
+  .slide {
+    position: absolute; inset:0;
+    display: flex; align-items: center; justify-content: center;
+    opacity:0; visibility: hidden;
+    transition: opacity 1s ease, visibility 0s 1s;
+  }
+  .slide.active {
+    opacity:1; visibility: visible;
+    transition: opacity 1s ease, visibility 0s 0s;
+  }
+
+  /* ═══ BACKGROUND LAYERS ═══ */
+  .slide-bg {
+    position: absolute; inset:0;
+    background-size: cover; background-position: center;
+  }
+  .slide-bg::after {
+    content:''; position: absolute; inset:0;
+  }
+  .bg-dark::after { background: rgba(0,0,0,.55); }
+  .bg-darker::after { background: rgba(0,0,0,.7); }
+  .bg-gradient::after { background: linear-gradient(135deg, rgba(26,92,46,.85), rgba(0,0,0,.6)); }
+  .bg-green::after { background: linear-gradient(135deg, rgba(26,92,46,.9) 0%, rgba(58,125,68,.8) 100%); }
+  .bg-orange::after { background: linear-gradient(135deg, rgba(232,117,26,.85) 0%, rgba(180,80,10,.9) 100%); }
+
+  /* ═══ CONTENT ═══ */
+  .slide-inner {
+    position: relative; z-index:2;
+    width: 90%; max-width: 1300px;
+    padding: 40px;
+  }
+
+  /* ═══ LOGO ═══ */
+  .logo-bar {
+    position: fixed; top:20px; left:32px; z-index:9998;
+    height: 40px;
+    opacity: .9;
+    filter: brightness(10);
+  }
+  .logo-inline {
+    height: 48px;
+    filter: brightness(10);
+    margin-bottom: 20px;
+  }
+
+  /* ═══ TYPOGRAPHY — BIG IMPACT ═══ */
+  .mega-title {
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+  }
+  .big-title {
+    font-size: clamp(2.2rem, 5vw, 4.2rem);
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .mid-title {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+  .subtitle {
+    font-size: clamp(1rem, 2vw, 1.4rem);
+    font-weight: 300;
+    line-height: 1.7;
+    opacity: .85;
+  }
+  .accent-green { color: var(--green-light); }
+  .accent-orange { color: var(--orange-light); }
+
+  /* ═══ ANIMATED ELEMENTS ═══ */
+  .anim {
+    opacity:0; transform: translateY(50px);
+    transition: opacity .8s ease, transform .8s cubic-bezier(.16,1,.3,1);
+  }
+  .slide.active .anim { opacity:1; transform: translateY(0); }
+  .slide.active .anim.d1 { transition-delay:.15s; }
+  .slide.active .anim.d2 { transition-delay:.3s; }
+  .slide.active .anim.d3 { transition-delay:.45s; }
+  .slide.active .anim.d4 { transition-delay:.6s; }
+  .slide.active .anim.d5 { transition-delay:.75s; }
+  .slide.active .anim.d6 { transition-delay:.9s; }
+  .slide.active .anim.d7 { transition-delay:1.05s; }
+
+  /* scale-in variant */
+  .anim-scale {
+    opacity:0; transform: scale(.85);
+    transition: opacity .8s ease, transform .8s cubic-bezier(.16,1,.3,1);
+  }
+  .slide.active .anim-scale { opacity:1; transform: scale(1); }
+  .slide.active .anim-scale.d2 { transition-delay:.3s; }
+  .slide.active .anim-scale.d3 { transition-delay:.45s; }
+
+  /* slide-in from left */
+  .anim-left {
+    opacity:0; transform: translateX(-60px);
+    transition: opacity .8s ease, transform .8s cubic-bezier(.16,1,.3,1);
+  }
+  .slide.active .anim-left { opacity:1; transform: translateX(0); }
+  .slide.active .anim-left.d1 { transition-delay:.15s; }
+  .slide.active .anim-left.d2 { transition-delay:.3s; }
+  .slide.active .anim-left.d3 { transition-delay:.45s; }
+
+  /* ═══ KENBURNS on images ═══ */
+  @keyframes kenburns {
+    0%   { transform: scale(1) translate(0,0); }
+    100% { transform: scale(1.08) translate(-1%,-1%); }
+  }
+  .slide.active .kb { animation: kenburns 12s ease-out forwards; }
+
+  /* ═══ LAYOUT HELPERS ═══ */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  /* ═══ STAT COUNTERS ═══ */
+  .stat-card {
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 900;
+    color: var(--green-light);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .stat-label {
+    font-size: 1rem;
+    font-weight: 400;
+    opacity: .7;
+  }
+
+  /* ═══ FEATURE CARDS ═══ */
+  .feat-card {
+    background: rgba(255,255,255,.06);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 16px;
+    padding: 28px 24px;
+    transition: transform .3s, border-color .3s;
+  }
+  .feat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--green-light);
+  }
+  .feat-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    margin-bottom: 16px;
+  }
+  .fi-green { background: rgba(106,191,105,.2); }
+  .fi-blue { background: rgba(66,165,245,.2); }
+  .fi-purple { background: rgba(186,104,200,.2); }
+  .fi-orange { background: rgba(255,167,38,.2); }
+  .fi-teal { background: rgba(38,198,198,.2); }
+
+  .feat-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .feat-desc {
+    font-size: .9rem;
+    line-height: 1.6;
+    opacity: .7;
+  }
+
+  /* ═══ PROCESS STEP ═══ */
+  .step-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px 24px;
+    background: rgba(255,255,255,.06);
+    border-radius: 14px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--green-light);
+  }
+  .step-num {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--green-light);
+    color: #000;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .step-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+  .step-text strong { color: var(--green-light); font-weight: 700; }
+
+  /* color variants */
+  .step-purple { border-left-color: #ce93d8; }
+  .step-purple .step-num { background: #ce93d8; }
+  .step-purple .step-text strong { color: #ce93d8; }
+
+  .step-orange { border-left-color: var(--orange-light); }
+  .step-orange .step-num { background: var(--orange-light); }
+  .step-orange .step-text strong { color: var(--orange-light); }
+
+  .step-teal { border-left-color: #4dd0e1; }
+  .step-teal .step-num { background: #4dd0e1; }
+  .step-teal .step-text strong { color: #4dd0e1; }
+
+  /* ═══ VIDEO PLACEHOLDER ═══ */
+  .vid-box {
+    background: rgba(0,0,0,.4);
+    border: 2px dashed rgba(255,255,255,.25);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .vid-box::before {
+    content:''; position: absolute; inset:0;
+    background: repeating-linear-gradient(45deg, transparent, transparent 24px, rgba(255,255,255,.015) 24px, rgba(255,255,255,.015) 48px);
+  }
+  .vid-play {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.12);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+    position: relative;
+  }
+  .vid-play::after {
+    content:''; border-style: solid;
+    border-width: 11px 0 11px 20px;
+    border-color: transparent transparent transparent rgba(255,255,255,.65);
+    margin-left: 3px;
+  }
+  .vid-title { font-size: .95rem; font-weight: 700; color: var(--orange-light); margin-bottom: 6px; position: relative; }
+  .vid-desc { font-size: .85rem; opacity: .6; line-height: 1.6; position: relative; }
+  .vid-spec { display: inline-block; margin-top: 10px; padding: 4px 12px; background: rgba(255,255,255,.07); border-radius: 8px; font-size: .75rem; opacity: .45; position: relative; }
+
+  /* ═══ PHOTO in slide ═══ */
+  .photo-frame {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .photo-frame img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ═══ FLOW DIAGRAM (improved) ═══ */
+  .flow-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .flow-node {
+    padding: 16px 36px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1.15rem;
+    text-align: center;
+    min-width: 200px;
+    backdrop-filter: blur(8px);
+  }
+  .flow-arr { font-size: 1.8rem; opacity: .4; line-height:1; }
+  .flow-split {
+    display: flex; gap: 48px; align-items: flex-start;
+  }
+  .flow-col {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .fn-g { background: rgba(106,191,105,.2); border: 1px solid rgba(106,191,105,.35); }
+  .fn-b { background: rgba(66,165,245,.15); border: 1px solid rgba(66,165,245,.3); }
+  .fn-p { background: rgba(186,104,200,.15); border: 1px solid rgba(186,104,200,.3); }
+  .fn-o { background: rgba(255,167,38,.15); border: 1px solid rgba(255,167,38,.3); }
+  .fn-t { background: rgba(77,208,225,.15); border: 1px solid rgba(77,208,225,.3); }
+
+  /* ═══ STRENGTH BARS ═══ */
+  .str-item {
+    display: flex; align-items: center; gap: 20px;
+    padding: 22px 28px;
+    background: rgba(255,255,255,.07);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    border-left: 5px solid var(--orange-light);
+  }
+  .str-num {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--orange);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 1.2rem;
+    flex-shrink:0;
+  }
+  .str-text {
+    font-size: 1.15rem;
+    line-height: 1.5;
+  }
+  .str-text strong { color: var(--orange-light); }
+
+  /* ═══ TAG ═══ */
+  .tag {
+    display: inline-block;
+    padding: 6px 18px;
+    border-radius: 24px;
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: .5px;
+    margin-bottom: 16px;
+  }
+  .t-green { background: rgba(106,191,105,.2); color: #a5d6a7; border: 1px solid rgba(106,191,105,.3); }
+  .t-blue { background: rgba(66,165,245,.15); color: #90caf9; border: 1px solid rgba(66,165,245,.25); }
+  .t-purple { background: rgba(186,104,200,.15); color: #ce93d8; border: 1px solid rgba(186,104,200,.25); }
+  .t-orange { background: rgba(255,167,38,.15); color: #ffb74d; border: 1px solid rgba(255,167,38,.25); }
+  .t-teal { background: rgba(77,208,225,.15); color: #80deea; border: 1px solid rgba(77,208,225,.25); }
+
+  /* ═══ SUBTITLE BAR ═══ */
+  #subs {
+    position: fixed;
+    bottom: 56px; left:50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.78);
+    backdrop-filter: blur(16px);
+    padding: 16px 40px;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 400; line-height: 1.7;
+    max-width: 920px; text-align: center;
+    z-index: 900;
+    opacity:0; transition: opacity .5s;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  #subs.on { opacity:1; }
+
+  /* ═══ CONTROLS ═══ */
+  #ctrls {
+    position: fixed; bottom:14px; left:50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px;
+    z-index: 9999;
+  }
+  .cb {
+    width:38px; height:38px; border-radius:50%;
+    border: 1px solid rgba(255,255,255,.2);
+    background: rgba(0,0,0,.5); backdrop-filter: blur(8px);
+    color:#fff; font-size:.9rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: background .2s;
+  }
+  .cb:hover { background: rgba(255,255,255,.15); }
+  #si { font-size:.78rem; opacity:.45; min-width:55px; text-align:center; }
+
+  /* dots */
+  #dots {
+    position:fixed; right:22px; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:7px; z-index:9999;
+  }
+  .dot {
+    width:9px; height:9px; border-radius:50%;
+    background: rgba(255,255,255,.2);
+    cursor:pointer; transition: all .3s;
+  }
+  .dot.on {
+    background: var(--green-light);
+    box-shadow: 0 0 10px rgba(106,191,105,.5);
+    transform: scale(1.4);
+  }
+
+  /* autoplay badge */
+  #badge {
+    position:fixed; top:18px; right:22px;
+    padding:5px 14px; border-radius:20px;
+    font-size:.72rem; font-weight:600;
+    z-index:9999; transition: all .3s;
+  }
+  #badge.on { background:rgba(106,191,105,.2); color:#a5d6a7; border:1px solid rgba(106,191,105,.3); }
+  #badge.off { background:rgba(255,167,38,.2); color:#ffb74d; border:1px solid rgba(255,167,38,.3); }
+
+  /* ═══ PULSE DOT ═══ */
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width:960px) {
+    .grid-2 { grid-template-columns:1fr; gap:24px; }
+    .grid-3, .grid-4 { grid-template-columns:repeat(2,1fr); }
+    .flow-split { flex-direction:column; gap:4px; }
+  }
+
+  /* ═══ COUNTER ANIM ═══ */
+  @keyframes countUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<img src="assets/logo.png" class="logo-bar" alt="두레생협">
+<div id="badge" class="on">AUTO</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 0 — HERO
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide active" data-sub="두레생협 화성물류센터를 소개합니다. 조합원의 건강한 먹거리가 어떻게 정확하고 안전하게 전달되는지, 함께 보시겠습니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/hero_exterior.jpg')"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <img src="assets/logo.png" class="anim logo-inline" alt="">
+    <div class="mega-title anim d1">
+      화성에서 피어나는<br><span class="accent-green">생명</span>의 <span class="accent-orange">두레</span>
+    </div>
+    <p class="subtitle anim d2" style="max-width:640px; margin:0 auto;">
+      조합원의 건강한 생활재를 정확하고 안전하게 전달하는<br>
+      <strong>두레생협 화성물류센터</strong>
+    </p>
+    <div style="margin-top:40px;" class="anim d3">
+      <span class="pulse" style="display:inline-block; width:8px; height:8px; background:var(--green-light); border-radius:50;"></span>
+      <span style="font-size:.85rem; opacity:.4; margin-left:8px;">자동 재생 중</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 1 — 센터 소개 + 외관
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="경기도 화성시 남양읍에 위치한 새로운 물류센터입니다. 최신 설비를 갖춘 대규모 시설로, 상온·냉장·냉동을 모두 처리합니다.">
+  <div class="slide-bg kb bg-gradient" style="background-image:url('assets/exterior2.jpg')"></div>
+  <div class="slide-inner">
+    <div class="grid-2">
+      <div>
+        <span class="tag t-green anim">NEW FACILITY</span>
+        <div class="big-title anim d1">
+          최첨단 시설,<br><span class="accent-green">새로운 물류센터</span>
+        </div>
+        <p class="subtitle anim d2">
+          경기도 화성시 남양읍 — 2025년 준공<br>
+          상온·냉장·냉동 통합 물류를 한 곳에서
+        </p>
+      </div>
+      <div class="anim-scale d3">
+        <div class="photo-frame" style="height:340px;">
+          <img src="assets/building_render.png" alt="물류센터 3D">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 2 — 핵심 수치 + 내부시설
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="최신 자동화 설비를 갖춘 물류센터입니다. 넓은 공간에서 상온, 냉장, 냉동 생활재를 효율적으로 처리합니다.">
+  <div class="slide-bg kb bg-darker" style="background-image:url('assets/work_overview.jpg')"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <span class="tag t-green anim">AT A GLANCE</span>
+    <div class="big-title anim d1">한눈에 보는 <span class="accent-green">물류센터</span></div>
+    <div class="grid-4 anim d2" style="margin-top:36px;">
+      <div class="stat-card">
+        <div class="stat-num" data-count="3">3</div>
+        <div class="stat-label">온도 구간<br><small style="opacity:.5">상온·냉장·냉동</small></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">4</div>
+        <div class="stat-label">핵심 공정<br><small style="opacity:.5">자동화 시스템</small></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--orange-light)">6</div>
+        <div class="stat-label">분배 통로<br><small style="opacity:.5">점포별 배분</small></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:#80deea;">25</div>
+        <div class="stat-label">분기 라인<br><small style="opacity:.5">무점포 배분</small></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 3 — 내부 시설 사진들
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="상온 보관실의 대형 랙, 냉장 작업실, 냉동 보관창고, 그리고 자동 컨베이어 시스템까지. 현대적 설비를 갖추고 있습니다.">
+  <div class="slide-bg" style="background:#111;"></div>
+  <div class="slide-inner">
+    <div style="text-align:center; margin-bottom:32px;">
+      <span class="tag t-blue anim">FACILITIES</span>
+      <div class="big-title anim d1">최신 <span class="accent-green">내부 시설</span></div>
+    </div>
+    <div class="grid-4" style="height:340px;">
+      <div class="photo-frame anim d2" style="height:100%;">
+        <img src="assets/ambient_storage.jpg" alt="상온보관실" style="height:100%;">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-weight:700;font-size:.95rem;">상온 보관실</div>
+      </div>
+      <div class="photo-frame anim d3" style="height:100%; position:relative;">
+        <img src="assets/cold_rack_storage.jpg" alt="냉장보관" style="height:100%;">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-weight:700;font-size:.95rem;">냉장 보관실</div>
+      </div>
+      <div class="photo-frame anim d4" style="height:100%; position:relative;">
+        <img src="assets/frozen_storage.jpg" alt="냉동실" style="height:100%;">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-weight:700;font-size:.95rem;">냉동 보관실</div>
+      </div>
+      <div class="photo-frame anim d5" style="height:100%; position:relative;">
+        <img src="assets/frozen_conveyor.jpg" alt="컨베이어" style="height:100%;">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:linear-gradient(transparent,rgba(0,0,0,.8));font-weight:700;font-size:.95rem;">냉동 집품 컨베이어</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 4 — 전체 물류 흐름도
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="입고된 생활재는 중분류를 거쳐 인덕션에서 컨베이어로 투입됩니다. 이후 점포와 무점포로 나뉘어 피킹되고, 각각 배송됩니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/floor_3d.png')"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <span class="tag t-blue anim">WORKFLOW</span>
+    <div class="big-title anim d1">물류 <span class="accent-green">전체 흐름</span></div>
+    <div class="flow-wrap anim d2" style="margin-top:28px;">
+      <div class="flow-node fn-g">입고 · 검수</div>
+      <div class="flow-arr">&#8595;</div>
+      <div class="flow-node fn-b">중분류 <span style="opacity:.5;font-weight:400;font-size:.85rem;">— 통로별 수량 분배</span></div>
+      <div class="flow-arr">&#8595;</div>
+      <div class="flow-node fn-g">인덕션 <span style="opacity:.5;font-weight:400;font-size:.85rem;">— 스캔 · 박스 투입</span></div>
+      <div class="flow-arr">&#8595;</div>
+      <div class="flow-node fn-t">컨베이어 자동 이송</div>
+      <div class="flow-arr">&#8601; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &#8600;</div>
+      <div class="flow-split">
+        <div class="flow-col">
+          <div class="flow-node fn-p">점포 DAS<br><span style="opacity:.5;font-weight:400;font-size:.85rem;">매장별 피킹</span></div>
+          <div class="flow-arr">&#8595;</div>
+          <div class="flow-node fn-p" style="font-size:.9rem;">롤테이너 → 점포배송</div>
+        </div>
+        <div class="flow-col">
+          <div class="flow-node fn-o">무점포 DAS<br><span style="opacity:.5;font-weight:400;font-size:.85rem;">개인별 피킹</span></div>
+          <div class="flow-arr">&#8595;</div>
+          <div class="flow-node fn-o" style="font-size:.9rem;">공급박스 → 배송센터</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 5 — 중분류
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="첫 번째 핵심 공정, 중분류입니다. 무선스캐너로 생활재를 스캔하면 현황판에 통로별 분배량이 자동 표시됩니다. 정확한 수량을 각 통로로 나눠줍니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/work_incoming.jpg')"></div>
+  <div class="slide-inner">
+    <div class="grid-2">
+      <div>
+        <span class="tag t-blue anim">PROCESS 01</span>
+        <div class="big-title anim d1"><span class="accent-green">중분류</span></div>
+        <p class="mid-title anim d2" style="opacity:.6; font-weight:400;">통로별 수량을 정확히 나누는 허브</p>
+        <div class="anim d3">
+          <div class="step-row"><div class="step-num">1</div><div class="step-text">대분류에서 생활재를 <strong>인수</strong>받아 구역 배치</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-text"><strong>무선스캐너</strong> 스캔 → 현황판에 분배량 자동 표시</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-text">박스/비집 구분하여 <strong>6개 통로</strong>로 파렛트에 분배</div></div>
+        </div>
+      </div>
+      <div class="anim-scale d3">
+        <div class="vid-box">
+          <div class="vid-play"></div>
+          <div class="vid-title">촬영 클립: 중분류 작업</div>
+          <div class="vid-desc">
+            현황판 전체 와이드 → 숫자 클로즈업<br>
+            무선스캐너 바코드 스캔 손 클로즈업<br>
+            통로별 파렛트에 분배하는 전경
+          </div>
+          <div class="vid-spec">와이드 + 클로즈업 교차 | 약 40초</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 6 — 인덕션
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="두 번째 공정, 인덕션입니다. 바코드를 스캔하고, 화면에 표시된 수량만큼 박스에 담아 컨베이어로 투입합니다. Enter 입력이 핵심입니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/dock_gates.jpg')"></div>
+  <div class="slide-inner">
+    <div class="grid-2">
+      <div>
+        <span class="tag t-green anim">PROCESS 02</span>
+        <div class="big-title anim d1"><span class="accent-green">인덕션</span></div>
+        <p class="mid-title anim d2" style="opacity:.6; font-weight:400;">스캔하고, 담고, 컨베이어로</p>
+        <div class="anim d3">
+          <div class="step-row"><div class="step-num">1</div><div class="step-text"><strong>고정/핸드 스캐너</strong>로 생활재 바코드 스캔</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-text">지시수량과 총수량 <strong>일치 확인</strong> (핵심!)</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-text">인덕션 박스에 담기 → <strong>Enter</strong> → 컨베이어 투입</div></div>
+        </div>
+      </div>
+      <div class="anim-scale d3">
+        <div class="vid-box">
+          <div class="vid-play"></div>
+          <div class="vid-title">촬영 클립: 인덕션 라인</div>
+          <div class="vid-desc">
+            고정스캐너 초록불 점등 클로즈업<br>
+            컴퓨터 화면 수량표시 클로즈업<br>
+            박스에 생활재 담고 Enter → 컨베이어 투입
+          </div>
+          <div class="vid-spec">작업자 시점 + 오버숄더 | 약 45초</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 7 — 컨베이어
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="인덕션에서 투입된 박스가 컨베이어를 따라 각 분기 구역으로 자동 이송됩니다. 정확한 통로로 박스를 보내는 자동 분류 시스템입니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/frozen_conveyor.jpg')"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <span class="tag t-teal anim">CONVEYOR</span>
+    <div class="big-title anim d1"><span class="accent-green">컨베이어</span> 자동 이송</div>
+    <p class="subtitle anim d2" style="max-width:600px; margin:0 auto 32px;">
+      인덕션에서 투입된 박스가 컨베이어를 따라<br>각 분기 구역으로 자동 분류·이송됩니다
+    </p>
+    <div class="anim d3" style="max-width:580px; margin:0 auto;">
+      <div class="vid-box">
+        <div class="vid-play"></div>
+        <div class="vid-title">촬영 클립: 컨베이어 이송</div>
+        <div class="vid-desc">
+          컨베이어 위 박스 흐르는 트래킹 숏 (카메라 따라감)<br>
+          분기점에서 박스 갈라지는 장면<br>
+          오버헤드(위에서) 앵글
+        </div>
+        <div class="vid-spec">트래킹 숏 + 고정 앵글 | 약 20초</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 8 — 점포 DAS
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="세 번째 공정, 점포 DAS입니다. 멀티표시기와 셀표시기를 보고 점포별로 정확한 수량을 피킹합니다. U자 동선으로 효율적으로 작업합니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/work_picking.jpg')"></div>
+  <div class="slide-inner">
+    <div class="grid-2">
+      <div>
+        <span class="tag t-purple anim">PROCESS 03</span>
+        <div class="big-title anim d1"><span style="color:#ce93d8;">점포 DAS</span></div>
+        <p class="mid-title anim d2" style="opacity:.6; font-weight:400;">매장별 정확한 피킹</p>
+        <div class="anim d3">
+          <div class="step-row step-purple"><div class="step-num">1</div><div class="step-text">롤테이너 세팅 + <strong>매장 부착지</strong> 점포번호 확인</div></div>
+          <div class="step-row step-purple"><div class="step-num">2</div><div class="step-text">유선스캐너 → 멀티판 수량 확인 → <strong>컨펌</strong></div></div>
+          <div class="step-row step-purple"><div class="step-num">3</div><div class="step-text"><strong>U자 동선</strong>으로 셀 순번·수량 확인 → 피킹</div></div>
+        </div>
+        <div class="grid-3 anim d4" style="margin-top:16px;">
+          <div class="feat-card" style="padding:16px;text-align:center;">
+            <div class="feat-title" style="font-size:.9rem;color:#ce93d8;">멀티표시기</div>
+            <div class="feat-desc" style="font-size:.78rem;">생활재명·수량 표시</div>
+          </div>
+          <div class="feat-card" style="padding:16px;text-align:center;">
+            <div class="feat-title" style="font-size:.9rem;color:#ce93d8;">셀표시기</div>
+            <div class="feat-desc" style="font-size:.78rem;">순번·수량 (색상 구분)</div>
+          </div>
+          <div class="feat-card" style="padding:16px;text-align:center;">
+            <div class="feat-title" style="font-size:.9rem;color:#ce93d8;">유선스캐너</div>
+            <div class="feat-desc" style="font-size:.78rem;">바코드 스캔·시작</div>
+          </div>
+        </div>
+      </div>
+      <div class="anim-scale d3">
+        <div class="vid-box">
+          <div class="vid-play"></div>
+          <div class="vid-title">촬영 클립: 점포DAS 피킹</div>
+          <div class="vid-desc">
+            멀티표시기 한글표시 클로즈업<br>
+            셀표시기 순번/수량 (흰색·검정 구분)<br>
+            순번판 놓는 장면 + U자 피킹<br>
+            축냉제 투입 장면 (냉장 구역)
+          </div>
+          <div class="vid-spec">밀착 촬영 + 표시기 클로즈업 | 약 50초</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 9 — 무점포 DAS
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="네 번째 공정, 무점포 DAS입니다. 개인 조합원 주문을 박스 단위로 정확히 피킹합니다. 배송센터별로 롤테이너에 적재 후 출고합니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/cold_room_das.jpg')"></div>
+  <div class="slide-inner">
+    <div class="grid-2">
+      <div>
+        <span class="tag t-orange anim">PROCESS 04</span>
+        <div class="big-title anim d1"><span class="accent-orange">무점포 DAS</span></div>
+        <p class="mid-title anim d2" style="opacity:.6; font-weight:400;">개인 조합원 주문, 하나하나 정확히</p>
+        <div class="anim d3">
+          <div class="step-row step-orange"><div class="step-num">1</div><div class="step-text">작업선반에 <strong>공급박스 배치</strong> + 라벨 부착</div></div>
+          <div class="step-row step-orange"><div class="step-num">2</div><div class="step-text">스캔 → 멀티판·통로별 수량 확인 → <strong>셀별 피킹</strong></div></div>
+          <div class="step-row step-orange"><div class="step-num">3</div><div class="step-text">배송센터별 롤테이너 적재 → <strong>혼적 검수</strong> → 출고</div></div>
+        </div>
+      </div>
+      <div class="anim-scale d3">
+        <div class="vid-box">
+          <div class="vid-play"></div>
+          <div class="vid-title">촬영 클립: 무점포DAS 전 과정</div>
+          <div class="vid-desc">
+            공급박스 배치 + 라벨 로케이션 매칭 클로즈업<br>
+            21~25분기 작업선반 와이드 숏<br>
+            피킹 → 롤테이너 시계방향 적재<br>
+            배송센터 종료 라벨 확인
+          </div>
+          <div class="vid-spec">와이드 → 클로즈업 전환 | 약 50초</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 10 — 품질·안전
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="품질과 안전이 최우선입니다. 적재 순서 관리, 축냉제 투입, 다단계 검증, 그리고 체계적인 예외처리까지 — 조합원의 생활재를 안전하게 지킵니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/loading_dock.jpg')"></div>
+  <div class="slide-inner">
+    <div class="grid-2">
+      <div>
+        <span class="tag t-teal anim">QUALITY & SAFETY</span>
+        <div class="big-title anim d1">안전하고<br><span style="color:#4dd0e1;">정확하게</span></div>
+        <div class="anim d2">
+          <div class="step-row step-teal"><div class="step-num" style="font-size:.9rem;">&#10003;</div><div class="step-text"><strong>적재 순서</strong> — 가벼운 것 위에 무거운 것 금지</div></div>
+          <div class="step-row step-teal"><div class="step-num" style="font-size:.9rem;">&#10003;</div><div class="step-text"><strong>콜드체인</strong> — 육류·유제품·김치 축냉제 필수</div></div>
+          <div class="step-row step-teal"><div class="step-num" style="font-size:.9rem;">&#10003;</div><div class="step-text"><strong>3단계 검증</strong> — 스캔 → 수량확인 → 컨펌</div></div>
+          <div class="step-row step-teal"><div class="step-num" style="font-size:.9rem;">&#10003;</div><div class="step-text"><strong>예외처리</strong> — 과부족·파손·장비고장 즉시 대응</div></div>
+        </div>
+      </div>
+      <div class="anim-scale d3">
+        <div class="vid-box">
+          <div class="vid-play"></div>
+          <div class="vid-title">촬영 클립: 품질관리</div>
+          <div class="vid-desc">
+            축냉제 EPP 박스 투입 클로즈업<br>
+            생활재 정돈 피킹 모범 장면<br>
+            롤테이너 걸쇠 체결 장면<br>
+            (선택) 잘못 vs 올바른 예 비교컷
+          </div>
+          <div class="vid-spec">클로즈업 위주 | 약 25초</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 11 — 이전 vs 이후
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="새 물류센터가 가져온 변화입니다. 표준화된 매뉴얼, 디지털 자동화 장비, 상온·냉장·냉동 통합 관리, 이중 검증 시스템, 그리고 점포와 무점포를 한 곳에서.">
+  <div class="slide-bg" style="background:linear-gradient(135deg, #0a1a0f 0%, #1a3a26 50%, #0d1b2a 100%);"></div>
+  <div class="slide-inner">
+    <div style="text-align:center; margin-bottom:32px;">
+      <span class="tag t-orange anim">WHAT CHANGED</span>
+      <div class="big-title anim d1">새 물류센터가 가져온 <span class="accent-orange">변화</span></div>
+    </div>
+    <div class="grid-3 anim d2">
+      <div class="feat-card">
+        <div class="feat-icon fi-green">&#128203;</div>
+        <div class="feat-title">표준화된 매뉴얼</div>
+        <div class="feat-desc">4개 공정 전체가 문서화<br>누구나 동일한 품질로 작업</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon fi-blue">&#128268;</div>
+        <div class="feat-title">디지털 자동화</div>
+        <div class="feat-desc">멀티표시기·현황판·바코드<br>사람의 실수를 시스템이 잡는다</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon fi-teal">&#10052;&#65039;</div>
+        <div class="feat-title">통합 온도 관리</div>
+        <div class="feat-desc">상온·냉장·냉동 한 건물에서<br>콜드체인 끊김 없이</div>
+      </div>
+      <div class="feat-card anim d3">
+        <div class="feat-icon fi-purple">&#128256;</div>
+        <div class="feat-title">이중·삼중 검증</div>
+        <div class="feat-desc">스캔→수량확인→컨펌<br>오투입을 원천 차단</div>
+      </div>
+      <div class="feat-card anim d4">
+        <div class="feat-icon fi-orange">&#128666;</div>
+        <div class="feat-title">점포+무점포 통합</div>
+        <div class="feat-desc">매장과 개인 조합원<br>모두를 위한 이원 체계</div>
+      </div>
+      <div class="feat-card anim d5">
+        <div class="feat-icon" style="background:rgba(255,255,255,.08);">&#127793;</div>
+        <div class="feat-title">조합원 중심</div>
+        <div class="feat-desc">건강한 생활재를<br>더 빠르고 정확하게</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 12 — 배송 출고
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="분류·피킹이 완료된 생활재는 롤테이너에 적재되어 각 점포와 배송센터로 출발합니다. 정확한 분리 적재가 마지막 품질을 결정합니다.">
+  <div class="slide-bg kb bg-dark" style="background-image:url('assets/exterior3.jpg')"></div>
+  <div class="slide-inner">
+    <div class="grid-2">
+      <div>
+        <span class="tag t-green anim">DELIVERY</span>
+        <div class="big-title anim d1">
+          정확한 분류,<br><span class="accent-green">안전한 배송</span>
+        </div>
+        <p class="subtitle anim d2">
+          분류·피킹이 완료된 생활재는<br>
+          롤테이너에 적재되어 전국 각 점포와<br>
+          배송센터로 출발합니다.
+        </p>
+        <div class="anim d3" style="margin-top:24px;">
+          <div class="step-row"><div class="step-num">&#10003;</div><div class="step-text">배송센터별 <strong>분리 적재</strong> 검수</div></div>
+          <div class="step-row"><div class="step-num">&#10003;</div><div class="step-text">라벨 번호순 <strong>시계방향 적재</strong> (최대 9단)</div></div>
+        </div>
+      </div>
+      <div class="anim-scale d3">
+        <div class="photo-frame" style="height:300px;">
+          <img src="assets/truck_illust.png" alt="배송 트럭" style="object-fit:contain; background:rgba(255,255,255,.9); padding:20px;">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 13 — CLOSING
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="두레생협 화성물류센터 — 조합원의 건강한 생활을 위해, 오늘도 정확하고 안전한 물류를 실현합니다. 감사합니다.">
+  <div class="slide-bg kb bg-gradient" style="background-image:url('assets/hero_exterior.jpg')"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <img src="assets/logo.png" class="anim logo-inline" alt="" style="height:56px;">
+    <div class="mega-title anim d1">
+      정확하게,<br>안전하게,<br><span class="accent-green">조합원에게</span>
+    </div>
+    <p class="subtitle anim d2" style="margin-top:16px; opacity:.6;">
+      두레생협 화성물류센터
+    </p>
+    <div class="anim d3" style="margin-top:48px;">
+      <img src="assets/delivery_illust.png" alt="" style="height:100px; opacity:.7;">
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SUBTITLE BAR ═══ -->
+<div id="subs"></div>
+
+<!-- ═══ DOTS ═══ -->
+<div id="dots"></div>
+
+<!-- ═══ CONTROLS ═══ -->
+<div id="ctrls">
+  <button class="cb" id="bp" title="이전">&#9664;</button>
+  <button class="cb" id="bt" title="재생/정지">&#9646;&#9646;</button>
+  <span id="si">1 / 14</span>
+  <button class="cb" id="bn" title="다음">&#9654;</button>
+</div>
+
+<script>
+(function(){
+  const S = document.querySelectorAll('.slide');
+  const dots = document.getElementById('dots');
+  const subs = document.getElementById('subs');
+  const prog = document.getElementById('progress');
+  const si = document.getElementById('si');
+  const badge = document.getElementById('badge');
+
+  let cur = 0, auto = true, tmr = null;
+  const DUR = 9000;
+
+  S.forEach((_,i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' on':'');
+    d.onclick = () => go(i);
+    dots.appendChild(d);
+  });
+
+  function go(n) {
+    if(n<0) n=S.length-1;
+    if(n>=S.length) n=0;
+    S[cur].classList.remove('active');
+    dots.children[cur].classList.remove('on');
+    cur=n;
+    S[cur].classList.add('active');
+    dots.children[cur].classList.add('on');
+
+    const t = S[cur].dataset.sub;
+    if(t){ subs.textContent=t; subs.classList.add('on'); }
+    else subs.classList.remove('on');
+
+    si.textContent = (cur+1)+' / '+S.length;
+    prog.style.width = ((cur+1)/S.length*100)+'%';
+    rst();
+  }
+
+  function nxt(){ go(cur+1); }
+  function prv(){ go(cur-1); }
+  function rst(){
+    clearInterval(tmr);
+    if(auto) tmr=setInterval(nxt, DUR);
+  }
+  function tog(){
+    auto=!auto;
+    if(auto){ document.getElementById('bt').innerHTML='&#9646;&#9646;'; badge.textContent='AUTO'; badge.className='on'; rst(); }
+    else { document.getElementById('bt').innerHTML='&#9654;'; badge.textContent='PAUSED'; badge.className='off'; clearInterval(tmr); }
+  }
+
+  document.getElementById('bn').onclick=nxt;
+  document.getElementById('bp').onclick=prv;
+  document.getElementById('bt').onclick=tog;
+
+  document.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight'||e.key===' '){ e.preventDefault(); nxt(); }
+    if(e.key==='ArrowLeft'){ e.preventDefault(); prv(); }
+    if(e.key==='p'||e.key==='P') tog();
+  });
+
+  go(0); rst();
+  setTimeout(()=>subs.classList.add('on'),600);
+})();
+</script>
+
+</body>
+</html>
