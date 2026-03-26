@@ -328,12 +328,12 @@
     grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
-  .video-grid .video-wrap { height: 38vh; }
-  .video-grid .video-wrap video { height: 38vh; }
-  .video-full { height: 55vh; }
-  .video-full video { height: 55vh; }
-  .video-side { height: 50vh; }
-  .video-side video { height: 50vh; }
+  .video-grid .video-wrap { height: 44vh; }
+  .video-grid .video-wrap video { height: 44vh; }
+  .video-full { height: 70vh; }
+  .video-full video { height: 70vh; }
+  .video-side { height: 62vh; }
+  .video-side video { height: 62vh; }
   .vid-desc { font-size: 1rem; opacity: .6; line-height: 1.6; position: relative; }
   .vid-spec { display: inline-block; margin-top: 10px; padding: 4px 12px; background: rgba(255,255,255,.07); border-radius: 8px; font-size: .85rem; opacity: .45; position: relative; }
 
@@ -342,7 +342,7 @@
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0,0,0,.4);
-    min-height: 45vh;
+    min-height: 55vh;
   }
   .photo-frame img {
     width: 100%; height: 100%;
@@ -1170,164 +1170,231 @@
 })();
 </script>
 
-<!-- ═══ BGM ENGINE (Web Audio API) ═══ -->
+<!-- ═══ BGM ENGINE — Emotional Cinematic ═══ -->
 <script>
 (function(){
-  let ctx, masterGain, bgmPlaying = false, loopHandle = null;
+  let ctx, master, reverb, bgmOn = false, loopId = null;
   const btn = document.getElementById('bgm-btn');
   const volPanel = document.getElementById('bgm-vol');
   const volRange = document.getElementById('bgm-range');
 
-  const N = {
-    C3:130.81,D3:146.83,E3:164.81,F3:174.61,G3:196.00,A3:220.00,B3:246.94,
-    C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392.00,A4:440.00,B4:493.88,
-    C5:523.25,D5:587.33,E5:659.25,G5:783.99
-  };
+  // Frequencies
+  const F = {};
+  'C Db D Eb E F Gb G Ab A Bb B'.split(' ').forEach((n,i) => {
+    for(let o=2;o<=6;o++) F[n+o] = 440 * Math.pow(2, (i-9)/12 + (o-4));
+  });
 
-  const BPM = 132;
-  const beat = 60 / BPM;
+  const BPM = 72;
+  const B = 60/BPM; // beat duration
 
-  // Melody — bright, cheerful
-  const mel = [
-    ['C5',.5],['E5',.5],['D5',.5],['C5',.5],
-    ['G4',.5],['A4',.5],['G4',1],
-    ['A4',.5],['C5',.5],['B4',.5],['A4',.5],
-    ['G4',.5],['E4',.5],['G4',1],
-    ['C5',.5],['D5',.5],['E5',.5],['C5',.5],
-    ['A4',.5],['G4',.5],['A4',1],
-    ['G4',.5],['A4',.5],['B4',.5],['C5',.5],
-    ['D5',.5],['E5',.5],['C5',1],
-  ];
+  // Create convolution reverb
+  function makeReverb(duration, decay) {
+    const len = ctx.sampleRate * duration;
+    const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for(let ch=0;ch<2;ch++){
+      const d = buf.getChannelData(ch);
+      for(let i=0;i<len;i++){
+        d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, decay);
+      }
+    }
+    const conv = ctx.createConvolver();
+    conv.buffer = buf;
+    return conv;
+  }
 
-  // Bass
-  const bass = [
-    ['C3',2],['G3',2],['F3',2],['G3',2],
-    ['C3',2],['A3',2],['F3',2],['G3',2],
-  ];
+  // Piano-like tone with harmonics + soft decay
+  function piano(freq, start, dur, vol) {
+    if(!ctx) return;
+    const g = ctx.createGain();
+    // Fundamental + harmonics for warm piano feel
+    [1, 2, 3, 5].forEach((h, idx) => {
+      const o = ctx.createOscillator();
+      const hGain = vol * [1, 0.3, 0.1, 0.03][idx];
+      o.type = 'sine';
+      o.frequency.value = freq * h;
+      // Slight detune for warmth
+      o.detune.value = (Math.random()-0.5) * 4;
+      const hg = ctx.createGain();
+      hg.gain.setValueAtTime(hGain, start);
+      hg.gain.exponentialRampToValueAtTime(hGain * 0.6, start + 0.01);
+      hg.gain.exponentialRampToValueAtTime(0.001, start + dur);
+      o.connect(hg); hg.connect(g);
+      o.start(start); o.stop(start + dur + 0.05);
+    });
+    g.connect(reverb); g.connect(master);
+  }
 
-  // Chords (arpeggiated pads)
-  const chords = [
-    [['C4','E4','G4'],2],[['C4','E4','G4'],2],
-    [['F3','A3','C4'],2],[['G3','B3','D4'],2],
-    [['C4','E4','G4'],2],[['A3','C4','E4'],2],
-    [['F3','A3','C4'],2],[['G3','B3','D4'],2],
-  ];
+  // Warm pad (layered detuned sines)
+  function pad(freqs, start, dur, vol) {
+    if(!ctx) return;
+    freqs.forEach(freq => {
+      for(let i=0;i<3;i++){
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = freq;
+        o.detune.value = (i-1) * 6; // spread for chorus
+        const v = vol / 3;
+        g.gain.setValueAtTime(0.001, start);
+        g.gain.exponentialRampToValueAtTime(v, start + dur*0.3);
+        g.gain.exponentialRampToValueAtTime(v * 0.7, start + dur*0.8);
+        g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+        o.connect(g); g.connect(reverb); g.connect(master);
+        o.start(start); o.stop(start + dur + 0.1);
+      }
+    });
+  }
 
-  function tone(freq, start, dur, type, vol) {
+  // Sub bass — deep warm foundation
+  function sub(freq, start, dur, vol) {
     if(!ctx) return;
     const o = ctx.createOscillator();
     const g = ctx.createGain();
-    o.type = type;
+    o.type = 'sine';
     o.frequency.value = freq;
-    const atk = Math.min(0.05, dur * 0.15);
-    const rel = Math.min(0.1, dur * 0.3);
     g.gain.setValueAtTime(0.001, start);
-    g.gain.exponentialRampToValueAtTime(vol, start + atk);
-    g.gain.setValueAtTime(vol, start + dur - rel);
+    g.gain.exponentialRampToValueAtTime(vol, start + 0.15);
+    g.gain.exponentialRampToValueAtTime(vol*0.7, start + dur*0.7);
     g.gain.exponentialRampToValueAtTime(0.001, start + dur);
-    o.connect(g); g.connect(masterGain);
-    o.start(start); o.stop(start + dur + 0.02);
+    o.connect(g); g.connect(master);
+    o.start(start); o.stop(start + dur + 0.05);
   }
 
-  function hihat(start, vol) {
+  // Gentle shimmering high note
+  function shimmer(freq, start, dur, vol) {
     if(!ctx) return;
-    const len = 0.03;
-    const buf = ctx.createBuffer(1, ctx.sampleRate * len, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1);
-    const src = ctx.createBufferSource(); src.buffer = buf;
-    const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=9000;
+    const o = ctx.createOscillator();
     const g = ctx.createGain();
-    g.gain.setValueAtTime(vol, start);
-    g.gain.exponentialRampToValueAtTime(0.001, start + len);
-    src.connect(hp); hp.connect(g); g.connect(masterGain);
-    src.start(start); src.stop(start + len + 0.01);
+    o.type = 'sine';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.001, start);
+    g.gain.exponentialRampToValueAtTime(vol, start + dur*0.4);
+    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    o.connect(g); g.connect(reverb);
+    o.start(start); o.stop(start + dur + 0.1);
   }
+
+  /* ── Musical Patterns ── */
+
+  // Piano arpeggios — gentle, emotional (G major / Em feel)
+  const arps = [
+    // Section A — hopeful
+    [['G3','B3','D4','G4','B4','D4'], 4],
+    [['C3','E3','G3','C4','E4','G3'], 4],
+    [['E3','G3','B3','E4','G4','B3'], 4],
+    [['D3','Gb3','A3','D4','Gb4','A3'], 4],
+    // Section B — warm resolve
+    [['C3','E3','G3','C4','E4','C4'], 4],
+    [['G3','B3','D4','G4','B4','G4'], 4],
+    [['A3','C4','E4','A4','C4','E4'], 4],
+    [['D3','Gb3','A3','D4','A3','Gb3'], 4],
+  ];
+
+  // Pad chords — long, warm
+  const pads = [
+    [['G3','B3','D4'], 8],
+    [['E3','G3','B3'], 8],
+    [['C3','E3','G3'], 8],
+    [['D3','Gb3','A3'], 8],
+  ];
+
+  // Bass notes
+  const bassLine = [
+    ['G2',4],['C3',4],['E2',4],['D2',4],
+    ['C2',4],['G2',4],['A2',4],['D2',4],
+  ];
+
+  // High shimmer melody — sparse, emotional
+  const melNotes = [
+    ['D5',2],['B4',2],['G4',1],['A4',1],['B4',2],
+    [null,1],['E5',1.5],['D5',1.5],['B4',2],[null,2],
+    ['G5',2],['E5',1],['D5',1],['C5',2],['B4',2],
+    [null,1],['A4',1],['B4',2],['D5',2],[null,2],
+  ];
 
   function scheduleLoop() {
-    if(!ctx || !bgmPlaying) return;
-    const now = ctx.currentTime + 0.05;
-    let loopDur = 0;
+    if(!ctx || !bgmOn) return;
+    const now = ctx.currentTime + 0.08;
 
-    // Melody
+    // Total loop duration
+    const loopBeats = arps.reduce((s,a)=>s+a[1],0);
+    const loopDur = loopBeats * B;
+
+    // 1. Piano arpeggios
     let t = now;
-    mel.forEach(([note,d]) => {
-      const dur = d * beat;
-      tone(N[note], t, dur * 0.8, 'sine', 0.35);
-      tone(N[note] * 2, t, dur * 0.8, 'sine', 0.08); // octave shimmer
+    arps.forEach(([notes, beats]) => {
+      const dur = beats * B;
+      const noteGap = dur / notes.length;
+      notes.forEach((n, i) => {
+        piano(F[n], t + i * noteGap, noteGap * 2.5, 0.18);
+      });
       t += dur;
     });
-    loopDur = t - now;
 
-    // Bass
+    // 2. Warm pads
     t = now;
-    bass.forEach(([note,d]) => {
-      const dur = d * beat;
-      tone(N[note], t, dur * 0.85, 'triangle', 0.25);
-      t += dur;
+    pads.forEach(([notes, beats]) => {
+      pad(notes.map(n=>F[n]), t, beats * B * 0.95, 0.12);
+      t += beats * B;
     });
 
-    // Chord pads
+    // 3. Sub bass
     t = now;
-    chords.forEach(([notes,d]) => {
-      const dur = d * beat;
-      notes.forEach(n => tone(N[n], t, dur * 0.9, 'sine', 0.07));
-      t += dur;
+    bassLine.forEach(([n, beats]) => {
+      sub(F[n], t, beats * B * 0.9, 0.2);
+      t += beats * B;
     });
 
-    // Hi-hats
-    const totalBeats = Math.floor(loopDur / (beat * 0.5));
-    for(let i=0; i<totalBeats; i++) {
-      hihat(now + i * beat * 0.5, i % 2 === 0 ? 0.12 : 0.06);
-    }
+    // 4. Shimmer melody
+    t = now;
+    melNotes.forEach(([n, beats]) => {
+      if(n) shimmer(F[n], t, beats * B * 0.9, 0.08);
+      t += beats * B;
+    });
 
-    // Kick-like low thump on beats 1 and 3
-    for(let i=0; i<totalBeats; i+=4) {
-      const kt = now + i * beat * 0.5;
-      tone(55, kt, 0.15, 'sine', 0.3);
-    }
-
-    loopHandle = setTimeout(scheduleLoop, (loopDur - 0.2) * 1000);
+    loopId = setTimeout(scheduleLoop, (loopDur - 0.5) * 1000);
   }
 
   function startBGM() {
     if(!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
-      masterGain = ctx.createGain();
-      masterGain.connect(ctx.destination);
+      master = ctx.createGain();
+      reverb = makeReverb(2.5, 2.5);
+      const reverbGain = ctx.createGain();
+      reverbGain.gain.value = 0.35;
+      reverb.connect(reverbGain);
+      reverbGain.connect(master);
+      master.connect(ctx.destination);
     }
-    masterGain.gain.value = volRange.value / 100;
+    master.gain.value = volRange.value / 100;
     if(ctx.state === 'suspended') ctx.resume();
-    bgmPlaying = true;
+    bgmOn = true;
     btn.classList.add('playing');
     scheduleLoop();
-    console.log('BGM started, volume:', masterGain.gain.value);
   }
 
   function stopBGM() {
-    bgmPlaying = false;
+    bgmOn = false;
     btn.classList.remove('playing');
-    if(loopHandle) { clearTimeout(loopHandle); loopHandle = null; }
-    if(masterGain) {
-      masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
-      masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+    if(loopId) { clearTimeout(loopId); loopId = null; }
+    if(master) {
+      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1);
     }
-    setTimeout(() => { if(ctx){ ctx.close().catch(()=>{}); ctx=null; } }, 600);
+    setTimeout(() => { if(ctx){ ctx.close().catch(()=>{}); ctx=null; reverb=null; } }, 1200);
   }
 
-  btn.addEventListener('click', function(e) {
+  btn.addEventListener('click', e => {
     e.stopPropagation();
-    if(bgmPlaying) stopBGM(); else startBGM();
+    bgmOn ? stopBGM() : startBGM();
   });
-
   btn.addEventListener('mouseenter', () => volPanel.classList.add('show'));
   volPanel.addEventListener('mouseleave', () => volPanel.classList.remove('show'));
-  btn.addEventListener('mouseleave', (e) => {
+  btn.addEventListener('mouseleave', () => {
     if(!volPanel.matches(':hover')) volPanel.classList.remove('show');
   });
-
   volRange.addEventListener('input', function() {
-    if(masterGain) masterGain.gain.value = this.value / 100;
+    if(master) master.gain.value = this.value / 100;
   });
 })();
 </script>
