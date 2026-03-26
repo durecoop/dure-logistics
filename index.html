@@ -1083,7 +1083,7 @@
 
 <!-- ═══ BGM CONTROL ═══ -->
 <button id="bgm-btn" title="배경음악 ON/OFF">&#9835;</button>
-<div id="bgm-vol"><input type="range" min="0" max="100" value="30" id="bgm-range"></div>
+<div id="bgm-vol"><input type="range" min="0" max="100" value="70" id="bgm-range"></div>
 
 <!-- ═══ CONTROLS ═══ -->
 <div id="ctrls">
@@ -1173,170 +1173,151 @@
 <!-- ═══ BGM ENGINE (Web Audio API) ═══ -->
 <script>
 (function(){
-  let ctx, masterGain, bgmPlaying = false;
+  let ctx, masterGain, bgmPlaying = false, loopHandle = null;
   const btn = document.getElementById('bgm-btn');
   const volPanel = document.getElementById('bgm-vol');
   const volRange = document.getElementById('bgm-range');
 
-  // Note frequencies
-  const NOTE = {
-    C3:130.81, D3:146.83, E3:164.81, F3:174.61, G3:196.00, A3:220.00, B3:246.94,
-    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00, B4:493.88,
-    C5:523.25, D5:587.33, E5:659.25, G5:783.99
+  const N = {
+    C3:130.81,D3:146.83,E3:164.81,F3:174.61,G3:196.00,A3:220.00,B3:246.94,
+    C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392.00,A4:440.00,B4:493.88,
+    C5:523.25,D5:587.33,E5:659.25,G5:783.99
   };
 
-  // Cheerful melody pattern (C major / G major - upbeat corporate feel)
-  const melodyPattern = [
-    // Bar 1
-    {n:'E4',d:0.25},{n:'G4',d:0.25},{n:'C5',d:0.5},{n:'B4',d:0.25},{n:'G4',d:0.25},{n:'A4',d:0.5},
-    // Bar 2
-    {n:'G4',d:0.25},{n:'E4',d:0.25},{n:'F4',d:0.25},{n:'G4',d:0.25},{n:'A4',d:0.5},{n:'G4',d:0.5},
-    // Bar 3
-    {n:'C5',d:0.25},{n:'B4',d:0.25},{n:'A4',d:0.25},{n:'G4',d:0.25},{n:'E4',d:0.5},{n:'D4',d:0.5},
-    // Bar 4
-    {n:'E4',d:0.25},{n:'F4',d:0.25},{n:'G4',d:0.5},{n:'C4',d:0.5},{n:'E4',d:0.5},
-    // Bar 5
-    {n:'D4',d:0.25},{n:'E4',d:0.25},{n:'G4',d:0.5},{n:'A4',d:0.25},{n:'G4',d:0.25},{n:'E4',d:0.5},
-    // Bar 6
-    {n:'F4',d:0.25},{n:'A4',d:0.25},{n:'G4',d:0.5},{n:'E4',d:0.25},{n:'D4',d:0.25},{n:'C4',d:0.5},
-    // Bar 7
-    {n:'D4',d:0.25},{n:'E4',d:0.25},{n:'F4',d:0.25},{n:'G4',d:0.25},{n:'A4',d:0.5},{n:'B4',d:0.5},
-    // Bar 8
-    {n:'C5',d:0.75},{n:'G4',d:0.25},{n:'E4',d:0.5},{n:'C4',d:0.5},
+  const BPM = 132;
+  const beat = 60 / BPM;
+
+  // Melody — bright, cheerful
+  const mel = [
+    ['C5',.5],['E5',.5],['D5',.5],['C5',.5],
+    ['G4',.5],['A4',.5],['G4',1],
+    ['A4',.5],['C5',.5],['B4',.5],['A4',.5],
+    ['G4',.5],['E4',.5],['G4',1],
+    ['C5',.5],['D5',.5],['E5',.5],['C5',.5],
+    ['A4',.5],['G4',.5],['A4',1],
+    ['G4',.5],['A4',.5],['B4',.5],['C5',.5],
+    ['D5',.5],['E5',.5],['C5',1],
   ];
 
-  // Bass pattern
-  const bassPattern = [
-    {n:'C3',d:1},{n:'G3',d:1},
-    {n:'A3',d:1},{n:'E3',d:1},
-    {n:'F3',d:1},{n:'C3',d:1},
-    {n:'G3',d:1},{n:'C3',d:1},
-    {n:'D3',d:1},{n:'G3',d:1},
-    {n:'F3',d:1},{n:'C3',d:1},
-    {n:'D3',d:1},{n:'G3',d:1},
-    {n:'C3',d:1},{n:'C3',d:1},
+  // Bass
+  const bass = [
+    ['C3',2],['G3',2],['F3',2],['G3',2],
+    ['C3',2],['A3',2],['F3',2],['G3',2],
   ];
 
-  // Chord pads
-  const chordPattern = [
-    {notes:['C4','E4','G4'],d:2},
-    {notes:['A3','C4','E4'],d:2},
-    {notes:['F3','A3','C4'],d:2},
-    {notes:['G3','B3','D4'],d:2},
-    {notes:['D4','F4','A4'],d:2},
-    {notes:['F3','A3','C4'],d:2},
-    {notes:['G3','B3','D4'],d:2},
-    {notes:['C4','E4','G4'],d:2},
+  // Chords (arpeggiated pads)
+  const chords = [
+    [['C4','E4','G4'],2],[['C4','E4','G4'],2],
+    [['F3','A3','C4'],2],[['G3','B3','D4'],2],
+    [['C4','E4','G4'],2],[['A3','C4','E4'],2],
+    [['F3','A3','C4'],2],[['G3','B3','D4'],2],
   ];
 
-  const TEMPO = 120; // BPM
-  const beatSec = 60 / TEMPO;
-  let loopTimers = [];
-
-  function playTone(freq, startTime, duration, type, gainVal, attack, release) {
-    const osc = ctx.createOscillator();
+  function tone(freq, start, dur, type, vol) {
+    if(!ctx) return;
+    const o = ctx.createOscillator();
     const g = ctx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, startTime);
-    g.gain.setValueAtTime(0, startTime);
-    g.gain.linearRampToValueAtTime(gainVal, startTime + attack);
-    g.gain.setValueAtTime(gainVal, startTime + duration - release);
-    g.gain.linearRampToValueAtTime(0, startTime + duration);
-    osc.connect(g);
-    g.connect(masterGain);
-    osc.start(startTime);
-    osc.stop(startTime + duration + 0.05);
+    o.type = type;
+    o.frequency.value = freq;
+    const atk = Math.min(0.05, dur * 0.15);
+    const rel = Math.min(0.1, dur * 0.3);
+    g.gain.setValueAtTime(0.001, start);
+    g.gain.exponentialRampToValueAtTime(vol, start + atk);
+    g.gain.setValueAtTime(vol, start + dur - rel);
+    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    o.connect(g); g.connect(masterGain);
+    o.start(start); o.stop(start + dur + 0.02);
+  }
+
+  function hihat(start, vol) {
+    if(!ctx) return;
+    const len = 0.03;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=9000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(vol, start);
+    g.gain.exponentialRampToValueAtTime(0.001, start + len);
+    src.connect(hp); hp.connect(g); g.connect(masterGain);
+    src.start(start); src.stop(start + len + 0.01);
   }
 
   function scheduleLoop() {
-    const now = ctx.currentTime + 0.1;
-    const loopLen = melodyPattern.reduce((s,n)=>s+n.d,0) * beatSec;
+    if(!ctx || !bgmPlaying) return;
+    const now = ctx.currentTime + 0.05;
+    let loopDur = 0;
 
-    // Melody (bright sine + triangle blend)
+    // Melody
     let t = now;
-    melodyPattern.forEach(n => {
-      const dur = n.d * beatSec;
-      playTone(NOTE[n.n], t, dur * 0.85, 'sine', 0.12, 0.02, 0.05);
-      playTone(NOTE[n.n], t, dur * 0.85, 'triangle', 0.06, 0.02, 0.05);
+    mel.forEach(([note,d]) => {
+      const dur = d * beat;
+      tone(N[note], t, dur * 0.8, 'sine', 0.35);
+      tone(N[note] * 2, t, dur * 0.8, 'sine', 0.08); // octave shimmer
       t += dur;
     });
+    loopDur = t - now;
 
-    // Bass (soft triangle)
+    // Bass
     t = now;
-    bassPattern.forEach(n => {
-      const dur = n.d * beatSec;
-      playTone(NOTE[n.n], t, dur * 0.8, 'triangle', 0.08, 0.03, 0.1);
+    bass.forEach(([note,d]) => {
+      const dur = d * beat;
+      tone(N[note], t, dur * 0.85, 'triangle', 0.25);
       t += dur;
     });
 
-    // Chord pads (very soft sine)
+    // Chord pads
     t = now;
-    chordPattern.forEach(ch => {
-      const dur = ch.d * beatSec;
-      ch.notes.forEach(n => {
-        playTone(NOTE[n], t, dur * 0.9, 'sine', 0.03, 0.1, 0.2);
-      });
+    chords.forEach(([notes,d]) => {
+      const dur = d * beat;
+      notes.forEach(n => tone(N[n], t, dur * 0.9, 'sine', 0.07));
       t += dur;
     });
 
-    // Light percussion (hi-hat feel with noise)
-    for(let i = 0; i < loopLen / (beatSec * 0.5); i++) {
-      const ht = now + i * beatSec * 0.5;
-      const accent = i % 2 === 0 ? 0.04 : 0.02;
-      const bufSize = ctx.sampleRate * 0.04;
-      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-      const data = buf.getChannelData(0);
-      for(let j = 0; j < bufSize; j++) data[j] = (Math.random() * 2 - 1) * accent;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buf;
-      const hpf = ctx.createBiquadFilter();
-      hpf.type = 'highpass';
-      hpf.frequency.value = 8000;
-      const ng = ctx.createGain();
-      ng.gain.setValueAtTime(accent, ht);
-      ng.gain.exponentialRampToValueAtTime(0.001, ht + 0.04);
-      noise.connect(hpf);
-      hpf.connect(ng);
-      ng.connect(masterGain);
-      noise.start(ht);
-      noise.stop(ht + 0.05);
+    // Hi-hats
+    const totalBeats = Math.floor(loopDur / (beat * 0.5));
+    for(let i=0; i<totalBeats; i++) {
+      hihat(now + i * beat * 0.5, i % 2 === 0 ? 0.12 : 0.06);
     }
 
-    // Schedule next loop
-    const tid = setTimeout(scheduleLoop, (loopLen - 0.5) * 1000);
-    loopTimers.push(tid);
+    // Kick-like low thump on beats 1 and 3
+    for(let i=0; i<totalBeats; i+=4) {
+      const kt = now + i * beat * 0.5;
+      tone(55, kt, 0.15, 'sine', 0.3);
+    }
+
+    loopHandle = setTimeout(scheduleLoop, (loopDur - 0.2) * 1000);
   }
 
   function startBGM() {
     if(!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = ctx.createGain();
-      masterGain.gain.value = volRange.value / 100 * 0.5;
       masterGain.connect(ctx.destination);
     }
+    masterGain.gain.value = volRange.value / 100;
     if(ctx.state === 'suspended') ctx.resume();
-    scheduleLoop();
     bgmPlaying = true;
     btn.classList.add('playing');
-    btn.innerHTML = '&#9835;';
+    scheduleLoop();
+    console.log('BGM started, volume:', masterGain.gain.value);
   }
 
   function stopBGM() {
-    loopTimers.forEach(t => clearTimeout(t));
-    loopTimers = [];
-    if(ctx) {
-      masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
-      setTimeout(() => { ctx.close(); ctx = null; }, 400);
-    }
     bgmPlaying = false;
     btn.classList.remove('playing');
-    btn.innerHTML = '&#9835;';
+    if(loopHandle) { clearTimeout(loopHandle); loopHandle = null; }
+    if(masterGain) {
+      masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime);
+      masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+    }
+    setTimeout(() => { if(ctx){ ctx.close().catch(()=>{}); ctx=null; } }, 600);
   }
 
   btn.addEventListener('click', function(e) {
     e.stopPropagation();
-    if(bgmPlaying) stopBGM();
-    else startBGM();
+    if(bgmPlaying) stopBGM(); else startBGM();
   });
 
   btn.addEventListener('mouseenter', () => volPanel.classList.add('show'));
@@ -1346,7 +1327,7 @@
   });
 
   volRange.addEventListener('input', function() {
-    if(masterGain) masterGain.gain.value = this.value / 100 * 0.5;
+    if(masterGain) masterGain.gain.value = this.value / 100;
   });
 })();
 </script>
