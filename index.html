@@ -491,6 +491,41 @@
 
   /* ═══ COUNTER ANIM ═══ */
   @keyframes countUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ═══ BGM CONTROL ═══ */
+  #bgm-btn {
+    position: fixed; top:18px; right:100px;
+    width:38px; height:38px; border-radius:50%;
+    border: 1px solid rgba(255,255,255,.2);
+    background: rgba(0,0,0,.5); backdrop-filter: blur(8px);
+    color:#fff; font-size:1.1rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: all .3s; z-index:9999;
+  }
+  #bgm-btn:hover { background: rgba(255,255,255,.15); }
+  #bgm-btn.playing { border-color: rgba(106,191,105,.5); box-shadow: 0 0 12px rgba(106,191,105,.3); }
+  #bgm-vol {
+    position: fixed; top:60px; right:100px;
+    width:38px; height:100px;
+    z-index:9999; display:none;
+    background: rgba(0,0,0,.7); backdrop-filter: blur(8px);
+    border-radius:19px; border: 1px solid rgba(255,255,255,.15);
+    padding: 12px 0;
+    flex-direction: column; align-items: center; justify-content: center;
+  }
+  #bgm-vol.show { display:flex; }
+  #bgm-vol input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 70px; height: 4px;
+    background: rgba(255,255,255,.2); border-radius:2px;
+    outline: none;
+    transform: rotate(-90deg);
+  }
+  #bgm-vol input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width:14px; height:14px; border-radius:50%;
+    background: var(--green-light); cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -1045,6 +1080,10 @@
 <!-- ═══ DOTS ═══ -->
 <div id="dots"></div>
 
+<!-- ═══ BGM CONTROL ═══ -->
+<button id="bgm-btn" title="배경음악 ON/OFF">&#9835;</button>
+<div id="bgm-vol"><input type="range" min="0" max="100" value="30" id="bgm-range"></div>
+
 <!-- ═══ CONTROLS ═══ -->
 <div id="ctrls">
   <button class="cb" id="bp" title="이전">&#9664;</button>
@@ -1127,6 +1166,187 @@
 
   go(0); rst();
   setTimeout(()=>subs.classList.add('on'),600);
+})();
+</script>
+
+<!-- ═══ BGM ENGINE (Web Audio API) ═══ -->
+<script>
+(function(){
+  let ctx, masterGain, bgmPlaying = false;
+  const btn = document.getElementById('bgm-btn');
+  const volPanel = document.getElementById('bgm-vol');
+  const volRange = document.getElementById('bgm-range');
+
+  // Note frequencies
+  const NOTE = {
+    C3:130.81, D3:146.83, E3:164.81, F3:174.61, G3:196.00, A3:220.00, B3:246.94,
+    C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00, B4:493.88,
+    C5:523.25, D5:587.33, E5:659.25, G5:783.99
+  };
+
+  // Cheerful melody pattern (C major / G major - upbeat corporate feel)
+  const melodyPattern = [
+    // Bar 1
+    {n:'E4',d:0.25},{n:'G4',d:0.25},{n:'C5',d:0.5},{n:'B4',d:0.25},{n:'G4',d:0.25},{n:'A4',d:0.5},
+    // Bar 2
+    {n:'G4',d:0.25},{n:'E4',d:0.25},{n:'F4',d:0.25},{n:'G4',d:0.25},{n:'A4',d:0.5},{n:'G4',d:0.5},
+    // Bar 3
+    {n:'C5',d:0.25},{n:'B4',d:0.25},{n:'A4',d:0.25},{n:'G4',d:0.25},{n:'E4',d:0.5},{n:'D4',d:0.5},
+    // Bar 4
+    {n:'E4',d:0.25},{n:'F4',d:0.25},{n:'G4',d:0.5},{n:'C4',d:0.5},{n:'E4',d:0.5},
+    // Bar 5
+    {n:'D4',d:0.25},{n:'E4',d:0.25},{n:'G4',d:0.5},{n:'A4',d:0.25},{n:'G4',d:0.25},{n:'E4',d:0.5},
+    // Bar 6
+    {n:'F4',d:0.25},{n:'A4',d:0.25},{n:'G4',d:0.5},{n:'E4',d:0.25},{n:'D4',d:0.25},{n:'C4',d:0.5},
+    // Bar 7
+    {n:'D4',d:0.25},{n:'E4',d:0.25},{n:'F4',d:0.25},{n:'G4',d:0.25},{n:'A4',d:0.5},{n:'B4',d:0.5},
+    // Bar 8
+    {n:'C5',d:0.75},{n:'G4',d:0.25},{n:'E4',d:0.5},{n:'C4',d:0.5},
+  ];
+
+  // Bass pattern
+  const bassPattern = [
+    {n:'C3',d:1},{n:'G3',d:1},
+    {n:'A3',d:1},{n:'E3',d:1},
+    {n:'F3',d:1},{n:'C3',d:1},
+    {n:'G3',d:1},{n:'C3',d:1},
+    {n:'D3',d:1},{n:'G3',d:1},
+    {n:'F3',d:1},{n:'C3',d:1},
+    {n:'D3',d:1},{n:'G3',d:1},
+    {n:'C3',d:1},{n:'C3',d:1},
+  ];
+
+  // Chord pads
+  const chordPattern = [
+    {notes:['C4','E4','G4'],d:2},
+    {notes:['A3','C4','E4'],d:2},
+    {notes:['F3','A3','C4'],d:2},
+    {notes:['G3','B3','D4'],d:2},
+    {notes:['D4','F4','A4'],d:2},
+    {notes:['F3','A3','C4'],d:2},
+    {notes:['G3','B3','D4'],d:2},
+    {notes:['C4','E4','G4'],d:2},
+  ];
+
+  const TEMPO = 120; // BPM
+  const beatSec = 60 / TEMPO;
+  let loopTimers = [];
+
+  function playTone(freq, startTime, duration, type, gainVal, attack, release) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(gainVal, startTime + attack);
+    g.gain.setValueAtTime(gainVal, startTime + duration - release);
+    g.gain.linearRampToValueAtTime(0, startTime + duration);
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+  }
+
+  function scheduleLoop() {
+    const now = ctx.currentTime + 0.1;
+    const loopLen = melodyPattern.reduce((s,n)=>s+n.d,0) * beatSec;
+
+    // Melody (bright sine + triangle blend)
+    let t = now;
+    melodyPattern.forEach(n => {
+      const dur = n.d * beatSec;
+      playTone(NOTE[n.n], t, dur * 0.85, 'sine', 0.12, 0.02, 0.05);
+      playTone(NOTE[n.n], t, dur * 0.85, 'triangle', 0.06, 0.02, 0.05);
+      t += dur;
+    });
+
+    // Bass (soft triangle)
+    t = now;
+    bassPattern.forEach(n => {
+      const dur = n.d * beatSec;
+      playTone(NOTE[n.n], t, dur * 0.8, 'triangle', 0.08, 0.03, 0.1);
+      t += dur;
+    });
+
+    // Chord pads (very soft sine)
+    t = now;
+    chordPattern.forEach(ch => {
+      const dur = ch.d * beatSec;
+      ch.notes.forEach(n => {
+        playTone(NOTE[n], t, dur * 0.9, 'sine', 0.03, 0.1, 0.2);
+      });
+      t += dur;
+    });
+
+    // Light percussion (hi-hat feel with noise)
+    for(let i = 0; i < loopLen / (beatSec * 0.5); i++) {
+      const ht = now + i * beatSec * 0.5;
+      const accent = i % 2 === 0 ? 0.04 : 0.02;
+      const bufSize = ctx.sampleRate * 0.04;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for(let j = 0; j < bufSize; j++) data[j] = (Math.random() * 2 - 1) * accent;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buf;
+      const hpf = ctx.createBiquadFilter();
+      hpf.type = 'highpass';
+      hpf.frequency.value = 8000;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(accent, ht);
+      ng.gain.exponentialRampToValueAtTime(0.001, ht + 0.04);
+      noise.connect(hpf);
+      hpf.connect(ng);
+      ng.connect(masterGain);
+      noise.start(ht);
+      noise.stop(ht + 0.05);
+    }
+
+    // Schedule next loop
+    const tid = setTimeout(scheduleLoop, (loopLen - 0.5) * 1000);
+    loopTimers.push(tid);
+  }
+
+  function startBGM() {
+    if(!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = ctx.createGain();
+      masterGain.gain.value = volRange.value / 100 * 0.5;
+      masterGain.connect(ctx.destination);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    scheduleLoop();
+    bgmPlaying = true;
+    btn.classList.add('playing');
+    btn.innerHTML = '&#9835;';
+  }
+
+  function stopBGM() {
+    loopTimers.forEach(t => clearTimeout(t));
+    loopTimers = [];
+    if(ctx) {
+      masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+      setTimeout(() => { ctx.close(); ctx = null; }, 400);
+    }
+    bgmPlaying = false;
+    btn.classList.remove('playing');
+    btn.innerHTML = '&#9835;';
+  }
+
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if(bgmPlaying) stopBGM();
+    else startBGM();
+  });
+
+  btn.addEventListener('mouseenter', () => volPanel.classList.add('show'));
+  volPanel.addEventListener('mouseleave', () => volPanel.classList.remove('show'));
+  btn.addEventListener('mouseleave', (e) => {
+    if(!volPanel.matches(':hover')) volPanel.classList.remove('show');
+  });
+
+  volRange.addEventListener('input', function() {
+    if(masterGain) masterGain.gain.value = this.value / 100 * 0.5;
+  });
 })();
 </script>
 
