@@ -268,7 +268,7 @@
   .step-teal .step-num { background: #4dd0e1; }
   .step-teal .step-text strong { color: #4dd0e1; }
 
-  /* ═══ VIDEO PLACEHOLDER ═══ */
+  /* ═══ VIDEO PLAYER ═══ */
   .vid-box {
     background: rgba(0,0,0,.4);
     border: 2px dashed rgba(255,255,255,.25);
@@ -297,6 +297,43 @@
     margin-left: 3px;
   }
   .vid-title { font-size: .95rem; font-weight: 700; color: var(--orange-light); margin-bottom: 6px; position: relative; }
+
+  /* ═══ REAL VIDEO EMBED ═══ */
+  .video-wrap {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    position: relative;
+    background: #000;
+  }
+  .video-wrap video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 16px;
+  }
+  .video-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 14px 20px;
+    background: linear-gradient(transparent, rgba(0,0,0,.85));
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--orange-light);
+    text-align: left;
+    border-radius: 0 0 16px 16px;
+  }
+  .video-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .video-grid .video-wrap { height: 220px; }
+  .video-grid .video-wrap video { height: 220px; }
+  .video-full { height: 360px; }
+  .video-full video { height: 360px; }
+  .video-side { height: 300px; }
+  .video-side video { height: 300px; }
   .vid-desc { font-size: .85rem; opacity: .6; line-height: 1.6; position: relative; }
   .vid-spec { display: inline-block; margin-top: 10px; padding: 4px 12px; background: rgba(255,255,255,.07); border-radius: 8px; font-size: .75rem; opacity: .45; position: relative; }
 
@@ -570,6 +607,78 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════
+     SLIDE 3-B — 드라이(상온) 구역 작업 영상
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="상온(드라이) 구역의 작업 과정입니다. 트럭에서 생활재가 입고되고, 대형 랙에 적치한 뒤, 토털 피킹 방식으로 주문별로 정확히 집품합니다.">
+  <div class="slide-bg" style="background:#111;"></div>
+  <div class="slide-inner">
+    <div style="text-align:center; margin-bottom:28px;">
+      <span class="tag t-green anim">DRY ZONE</span>
+      <div class="big-title anim d1"><span class="accent-green">상온(드라이)</span> 구역 작업</div>
+      <p class="subtitle anim d2">입고 → 적치 → 토털 피킹의 전 과정</p>
+    </div>
+    <div class="grid-2 anim d3">
+      <div>
+        <div class="video-wrap" style="height:200px; margin-bottom:16px;">
+          <video muted loop playsinline preload="metadata" src="assets/videos/1. 드라이/드라이 2_입고.mp4" style="height:200px;"></video>
+          <div class="video-label">입고 작업</div>
+        </div>
+        <div class="video-wrap" style="height:200px;">
+          <video muted loop playsinline preload="metadata" src="assets/videos/1. 드라이/드라이 3_적치.mp4" style="height:200px;"></video>
+          <div class="video-label">랙 적치</div>
+        </div>
+      </div>
+      <div>
+        <div class="video-wrap" style="height:200px; margin-bottom:16px;">
+          <video muted loop playsinline preload="metadata" src="assets/videos/1. 드라이/드라이 4_토털 피킹.mp4" style="height:200px;"></video>
+          <div class="video-label">토털 피킹 (1)</div>
+        </div>
+        <div class="video-wrap" style="height:200px;">
+          <video muted loop playsinline preload="metadata" src="assets/videos/1. 드라이/드라이 5_토털 피킹.mp4" style="height:200px;"></video>
+          <div class="video-label">토털 피킹 (2)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 3-C — 냉장 구역 작업 영상
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="냉장 구역의 작업 모습입니다. 냉장 전실에서 준비를 마치고, 생활재를 입고·검품한 뒤 대분류 작업을 진행합니다. 온도를 유지하며 신선하게 처리합니다.">
+  <div class="slide-bg" style="background:#0a1520;"></div>
+  <div class="slide-inner">
+    <div style="text-align:center; margin-bottom:28px;">
+      <span class="tag t-blue anim">COLD ZONE</span>
+      <div class="big-title anim d1"><span style="color:#90caf9;">냉장</span> 구역 작업</div>
+      <p class="subtitle anim d2">냉장 전실 → 입고·검품 → 대분류까지</p>
+    </div>
+    <div class="grid-2 anim d3">
+      <div>
+        <div class="video-wrap" style="height:200px; margin-bottom:16px;">
+          <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 1 냉장전실.mp4" style="height:200px;"></video>
+          <div class="video-label">냉장 전실</div>
+        </div>
+        <div class="video-wrap" style="height:200px;">
+          <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 2 입고, 검품.mp4" style="height:200px;"></video>
+          <div class="video-label">입고 · 검품</div>
+        </div>
+      </div>
+      <div>
+        <div class="video-wrap" style="height:200px; margin-bottom:16px;">
+          <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 3 대분류.mp4" style="height:200px;"></video>
+          <div class="video-label">대분류 작업</div>
+        </div>
+        <div class="video-wrap" style="height:200px;">
+          <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 4 대분류 스캔.mp4" style="height:200px;"></video>
+          <div class="video-label">대분류 스캔</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
      SLIDE 4 — 전체 물류 흐름도
      ══════════════════════════════════════════════════════════════ -->
 <div class="slide" data-sub="입고된 생활재는 중분류를 거쳐 인덕션에서 컨베이어로 투입됩니다. 이후 점포와 무점포로 나뉘어 피킹되고, 각각 배송됩니다.">
@@ -620,16 +729,42 @@
         </div>
       </div>
       <div class="anim-scale d3">
-        <div class="vid-box">
-          <div class="vid-play"></div>
-          <div class="vid-title">촬영 클립: 중분류 작업</div>
-          <div class="vid-desc">
-            현황판 전체 와이드 → 숫자 클로즈업<br>
-            무선스캐너 바코드 스캔 손 클로즈업<br>
-            통로별 파렛트에 분배하는 전경
-          </div>
-          <div class="vid-spec">와이드 + 클로즈업 교차 | 약 40초</div>
+        <div class="video-wrap video-side">
+          <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 6 중분류.mp4"></video>
+          <div class="video-label">중분류 작업 실제 영상</div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 5-B — 중분류 상세 영상 (냉장 대분류 스캔)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="대분류 스캔 작업입니다. 입고된 생활재를 바코드로 스캔하여 품목을 확인하고, 구역별로 분류합니다. 화면에 표시된 정보를 확인하며 정확하게 작업합니다.">
+  <div class="slide-bg" style="background:#0a1a0f;"></div>
+  <div class="slide-inner">
+    <div style="text-align:center; margin-bottom:28px;">
+      <span class="tag t-blue anim">PROCESS 01-B</span>
+      <div class="big-title anim d1"><span class="accent-green">대분류</span> · 스캔 작업</div>
+      <p class="subtitle anim d2">입고된 생활재를 스캔하여 품목별로 정확히 분류합니다</p>
+    </div>
+    <div class="video-grid anim d3">
+      <div class="video-wrap">
+        <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 3 대분류.mp4"></video>
+        <div class="video-label">대분류 작업</div>
+      </div>
+      <div class="video-wrap">
+        <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 4 대분류 스캔.mp4"></video>
+        <div class="video-label">대분류 스캔</div>
+      </div>
+      <div class="video-wrap">
+        <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 5 대분류 스캔 화면.mp4"></video>
+        <div class="video-label">스캔 화면 확인</div>
+      </div>
+      <div class="video-wrap">
+        <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 7 매장 분배.mp4"></video>
+        <div class="video-label">매장별 분배</div>
       </div>
     </div>
   </div>
@@ -653,15 +788,9 @@
         </div>
       </div>
       <div class="anim-scale d3">
-        <div class="vid-box">
-          <div class="vid-play"></div>
-          <div class="vid-title">촬영 클립: 인덕션 라인</div>
-          <div class="vid-desc">
-            고정스캐너 초록불 점등 클로즈업<br>
-            컴퓨터 화면 수량표시 클로즈업<br>
-            박스에 생활재 담고 Enter → 컨베이어 투입
-          </div>
-          <div class="vid-spec">작업자 시점 + 오버숄더 | 약 45초</div>
+        <div class="video-wrap video-side">
+          <video muted loop playsinline preload="metadata" src="assets/videos/3. 인덕션/인덕션 1 분배.mp4"></video>
+          <div class="video-label">인덕션 분배 작업</div>
         </div>
       </div>
     </div>
@@ -679,16 +808,10 @@
     <p class="subtitle anim d2" style="max-width:600px; margin:0 auto 32px;">
       인덕션에서 투입된 박스가 컨베이어를 따라<br>각 분기 구역으로 자동 분류·이송됩니다
     </p>
-    <div class="anim d3" style="max-width:580px; margin:0 auto;">
-      <div class="vid-box">
-        <div class="vid-play"></div>
-        <div class="vid-title">촬영 클립: 컨베이어 이송</div>
-        <div class="vid-desc">
-          컨베이어 위 박스 흐르는 트래킹 숏 (카메라 따라감)<br>
-          분기점에서 박스 갈라지는 장면<br>
-          오버헤드(위에서) 앵글
-        </div>
-        <div class="vid-spec">트래킹 숏 + 고정 앵글 | 약 20초</div>
+    <div class="anim d3" style="max-width:740px; margin:0 auto;">
+      <div class="video-wrap video-full">
+        <video muted loop playsinline preload="metadata" src="assets/videos/3. 인덕션/인덕션 2 레일.mp4"></video>
+        <div class="video-label">컨베이어 레일 자동 이송</div>
       </div>
     </div>
   </div>
@@ -726,16 +849,9 @@
         </div>
       </div>
       <div class="anim-scale d3">
-        <div class="vid-box">
-          <div class="vid-play"></div>
-          <div class="vid-title">촬영 클립: 점포DAS 피킹</div>
-          <div class="vid-desc">
-            멀티표시기 한글표시 클로즈업<br>
-            셀표시기 순번/수량 (흰색·검정 구분)<br>
-            순번판 놓는 장면 + U자 피킹<br>
-            축냉제 투입 장면 (냉장 구역)
-          </div>
-          <div class="vid-spec">밀착 촬영 + 표시기 클로즈업 | 약 50초</div>
+        <div class="video-wrap video-side">
+          <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 7 매장 분배.mp4"></video>
+          <div class="video-label">점포 DAS — 매장별 분배 작업</div>
         </div>
       </div>
     </div>
@@ -760,17 +876,42 @@
         </div>
       </div>
       <div class="anim-scale d3">
-        <div class="vid-box">
-          <div class="vid-play"></div>
-          <div class="vid-title">촬영 클립: 무점포DAS 전 과정</div>
-          <div class="vid-desc">
-            공급박스 배치 + 라벨 로케이션 매칭 클로즈업<br>
-            21~25분기 작업선반 와이드 숏<br>
-            피킹 → 롤테이너 시계방향 적재<br>
-            배송센터 종료 라벨 확인
-          </div>
-          <div class="vid-spec">와이드 → 클로즈업 전환 | 약 50초</div>
+        <div class="video-wrap video-side">
+          <video muted loop playsinline preload="metadata" src="assets/videos/DAS 무점포/무점포 1 전경.mp4"></video>
+          <div class="video-label">무점포 DAS 전경</div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SLIDE 9-B — 무점포 DAS 상세 영상
+     ══════════════════════════════════════════════════════════════ -->
+<div class="slide" data-sub="무점포 DAS의 세부 작업 과정입니다. 박스가 도착하면 바코드를 스캔하고, 표시기를 확인하며 개인 조합원 주문을 정확히 피킹합니다.">
+  <div class="slide-bg" style="background:#0d1b2a;"></div>
+  <div class="slide-inner">
+    <div style="text-align:center; margin-bottom:28px;">
+      <span class="tag t-orange anim">PROCESS 04-B</span>
+      <div class="big-title anim d1"><span class="accent-orange">무점포 DAS</span> 상세 작업</div>
+      <p class="subtitle anim d2">도착 → 스캔 → 피킹 → 표시기 확인까지</p>
+    </div>
+    <div class="video-grid anim d3">
+      <div class="video-wrap">
+        <video muted loop playsinline preload="metadata" src="assets/videos/DAS 무점포/무점포 2 도착.mp4"></video>
+        <div class="video-label">박스 도착</div>
+      </div>
+      <div class="video-wrap">
+        <video muted loop playsinline preload="metadata" src="assets/videos/DAS 무점포/무점포 3 스캔.mp4"></video>
+        <div class="video-label">바코드 스캔</div>
+      </div>
+      <div class="video-wrap">
+        <video muted loop playsinline preload="metadata" src="assets/videos/DAS 무점포/무점포 4 피킹.mp4"></video>
+        <div class="video-label">피킹 작업</div>
+      </div>
+      <div class="video-wrap">
+        <video muted loop playsinline preload="metadata" src="assets/videos/DAS 무점포/무점포 6 표시기.mp4"></video>
+        <div class="video-label">표시기 확인</div>
       </div>
     </div>
   </div>
@@ -794,16 +935,9 @@
         </div>
       </div>
       <div class="anim-scale d3">
-        <div class="vid-box">
-          <div class="vid-play"></div>
-          <div class="vid-title">촬영 클립: 품질관리</div>
-          <div class="vid-desc">
-            축냉제 EPP 박스 투입 클로즈업<br>
-            생활재 정돈 피킹 모범 장면<br>
-            롤테이너 걸쇠 체결 장면<br>
-            (선택) 잘못 vs 올바른 예 비교컷
-          </div>
-          <div class="vid-spec">클로즈업 위주 | 약 25초</div>
+        <div class="video-wrap video-side">
+          <video muted loop playsinline preload="metadata" src="assets/videos/2. 냉장/냉장 2 입고, 검품.mp4"></video>
+          <div class="video-label">입고 · 검품 작업</div>
         </div>
       </div>
     </div>
@@ -915,7 +1049,7 @@
 <div id="ctrls">
   <button class="cb" id="bp" title="이전">&#9664;</button>
   <button class="cb" id="bt" title="재생/정지">&#9646;&#9646;</button>
-  <span id="si">1 / 14</span>
+  <span id="si">1 / 18</span><!-- auto-updated by script -->
   <button class="cb" id="bn" title="다음">&#9654;</button>
 </div>
 
@@ -930,6 +1064,7 @@
 
   let cur = 0, auto = true, tmr = null;
   const DUR = 9000;
+  const DUR_VIDEO = 15000;
 
   S.forEach((_,i) => {
     const d = document.createElement('div');
@@ -938,14 +1073,23 @@
     dots.appendChild(d);
   });
 
+  function pauseAllVideos(slide) {
+    slide.querySelectorAll('video').forEach(v => { v.pause(); v.currentTime = 0; });
+  }
+  function playAllVideos(slide) {
+    slide.querySelectorAll('video').forEach(v => { v.play().catch(()=>{}); });
+  }
+
   function go(n) {
     if(n<0) n=S.length-1;
     if(n>=S.length) n=0;
+    pauseAllVideos(S[cur]);
     S[cur].classList.remove('active');
     dots.children[cur].classList.remove('on');
     cur=n;
     S[cur].classList.add('active');
     dots.children[cur].classList.add('on');
+    setTimeout(() => playAllVideos(S[cur]), 400);
 
     const t = S[cur].dataset.sub;
     if(t){ subs.textContent=t; subs.classList.add('on'); }
@@ -960,7 +1104,10 @@
   function prv(){ go(cur-1); }
   function rst(){
     clearInterval(tmr);
-    if(auto) tmr=setInterval(nxt, DUR);
+    if(auto) {
+      const hasVideo = S[cur].querySelector('video') !== null;
+      tmr = setInterval(nxt, hasVideo ? DUR_VIDEO : DUR);
+    }
   }
   function tog(){
     auto=!auto;
