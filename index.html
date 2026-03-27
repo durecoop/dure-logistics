@@ -1128,41 +1128,42 @@
 
 <!-- ═══ BGM CONTROL ═══ -->
 <button id="bgm-btn" title="배경음악 ON/OFF">&#9835;</button>
+<audio id="bgm" preload="none"></audio>
 <div id="music-panel">
   <div class="panel-title">&#127925; 배경음악 선택</div>
-  <div class="music-item" data-track="emotional">
+  <div class="music-item" data-track="0">
     <div class="mi-icon" style="background:rgba(106,191,105,.15);">&#127929;</div>
-    <div class="mi-info"><div class="mi-name">감성 피아노</div><div class="mi-desc">따뜻하고 감동적인 피아노 선율</div></div>
+    <div class="mi-info"><div class="mi-name">피아노</div><div class="mi-desc">잔잔하고 서정적인 피아노 선율</div></div>
     <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
   </div>
-  <div class="music-item" data-track="jazz">
-    <div class="mi-icon" style="background:rgba(255,180,60,.15);">&#127927;</div>
-    <div class="mi-info"><div class="mi-name">편안한 재즈</div><div class="mi-desc">부드러운 재즈 피아노 & 베이스</div></div>
+  <div class="music-item" data-track="1">
+    <div class="mi-icon" style="background:rgba(100,220,200,.15);">&#127807;</div>
+    <div class="mi-info"><div class="mi-name">영감</div><div class="mi-desc">새로운 시작을 여는 영감의 멜로디</div></div>
     <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
   </div>
-  <div class="music-item" data-track="orchestra">
-    <div class="mi-icon" style="background:rgba(180,100,255,.15);">&#127931;</div>
-    <div class="mi-info"><div class="mi-name">희망 오케스트라</div><div class="mi-desc">웅장하고 희망찬 오케스트라</div></div>
+  <div class="music-item" data-track="2">
+    <div class="mi-icon" style="background:rgba(255,180,60,.15);">&#127749;</div>
+    <div class="mi-info"><div class="mi-name">희망</div><div class="mi-desc">밝고 따뜻한 희망의 선율</div></div>
     <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
   </div>
-  <div class="music-item" data-track="ambient">
-    <div class="mi-icon" style="background:rgba(80,180,255,.15);">&#127754;</div>
-    <div class="mi-info"><div class="mi-name">차분한 앰비언트</div><div class="mi-desc">명상적이고 고요한 사운드스케이프</div></div>
+  <div class="music-item" data-track="3">
+    <div class="mi-icon" style="background:rgba(180,100,255,.15);">&#127969;</div>
+    <div class="mi-info"><div class="mi-name">감성</div><div class="mi-desc">마음을 어루만지는 감성 음악</div></div>
     <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
   </div>
-  <div class="music-item" data-track="acoustic">
-    <div class="mi-icon" style="background:rgba(255,130,100,.15);">&#127928;</div>
-    <div class="mi-info"><div class="mi-name">경쾌한 어쿠스틱</div><div class="mi-desc">밝고 활기찬 기타 멜로디</div></div>
+  <div class="music-item" data-track="4">
+    <div class="mi-icon" style="background:rgba(255,130,100,.15);">&#128640;</div>
+    <div class="mi-info"><div class="mi-name">도약</div><div class="mi-desc">힘차고 역동적인 도약의 음악</div></div>
     <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
   </div>
-  <div class="music-item" data-track="newage">
-    <div class="mi-icon" style="background:rgba(100,220,200,.15);">&#10024;</div>
-    <div class="mi-info"><div class="mi-name">뉴에이지 힐링</div><div class="mi-desc">크리스탈처럼 맑은 치유 선율</div></div>
+  <div class="music-item" data-track="5">
+    <div class="mi-icon" style="background:rgba(80,180,255,.15);">&#127908;</div>
+    <div class="mi-info"><div class="mi-name">바람의 노래</div><div class="mi-desc">싱어게인 - 바람의 노래</div></div>
     <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
   </div>
   <div id="music-vol-wrap">
     <label>&#128266;</label>
-    <input type="range" min="0" max="100" value="70" id="bgm-range">
+    <input type="range" min="0" max="100" value="20" id="bgm-range">
   </div>
 </div>
 
@@ -1251,520 +1252,61 @@
 })();
 </script>
 
-<!-- ═══ BGM ENGINE — Multi-Track Music Selector ═══ -->
+<!-- ═══ BGM ENGINE — External MP3 Playlist ═══ -->
 <script>
 (function(){
-  let ctx, master, reverb, bgmOn = false, loopId = null;
+  const bgmPlaylist = [
+    'https://assets.mixkit.co/music/22/22.mp3',
+    'https://assets.mixkit.co/music/587/587.mp3',
+    'https://assets.mixkit.co/music/543/543.mp3',
+    'https://assets.mixkit.co/music/551/551.mp3',
+    'https://assets.mixkit.co/music/31/31.mp3',
+    'bgm/singeragain-wind-song.webm'
+  ];
+  let bgmPlaying = false;
   let currentTrack = null;
   const btn = document.getElementById('bgm-btn');
   const panel = document.getElementById('music-panel');
   const volRange = document.getElementById('bgm-range');
   const items = document.querySelectorAll('.music-item');
+  const bgm = document.getElementById('bgm');
 
-  /* ── Frequency Table ── */
-  const F = {};
-  'C Db D Eb E F Gb G Ab A Bb B'.split(' ').forEach((n,i) => {
-    for(let o=1;o<=7;o++) F[n+o] = 440 * Math.pow(2, (i-9)/12 + (o-4));
+  /* ── Load & Play ── */
+  function loadBgmTrack(idx) {
+    bgm.src = bgmPlaylist[idx % bgmPlaylist.length];
+    bgm.load();
+  }
+
+  bgm.addEventListener('ended', () => {
+    const nextIdx = (parseInt(currentTrack) + 1) % bgmPlaylist.length;
+    currentTrack = String(nextIdx);
+    loadBgmTrack(nextIdx);
+    bgm.volume = volRange.value / 100;
+    bgm.play().catch(() => {});
+    updateActiveItem();
   });
 
-  /* ── Audio Helpers ── */
-  function makeReverb(duration, decay) {
-    const len = ctx.sampleRate * duration;
-    const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-    for(let ch=0;ch<2;ch++){
-      const d = buf.getChannelData(ch);
-      for(let i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, decay);
-    }
-    const conv = ctx.createConvolver();
-    conv.buffer = buf;
-    return conv;
+  function startBGM(trackIdx) {
+    currentTrack = trackIdx;
+    loadBgmTrack(parseInt(trackIdx));
+    bgm.volume = volRange.value / 100;
+    bgm.play().catch(() => {});
+    bgmPlaying = true;
+    btn.classList.add('playing');
+    updateActiveItem();
   }
 
-  function tone(type, freq, start, dur, vol, useReverb) {
-    if(!ctx||!bgmOn) return;
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = type;
-    o.frequency.value = freq;
-    g.gain.setValueAtTime(0.001, start);
-    g.gain.exponentialRampToValueAtTime(vol, start + 0.02);
-    g.gain.exponentialRampToValueAtTime(vol*0.6, start + dur*0.5);
-    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
-    o.connect(g);
-    if(useReverb && reverb) g.connect(reverb);
-    g.connect(master);
-    o.start(start); o.stop(start + dur + 0.05);
-  }
-
-  function piano(freq, start, dur, vol) {
-    if(!ctx||!bgmOn) return;
-    const g = ctx.createGain();
-    [1,2,3,5].forEach((h,idx) => {
-      const o = ctx.createOscillator();
-      const hv = vol * [1,.3,.1,.03][idx];
-      o.type = 'sine';
-      o.frequency.value = freq * h;
-      o.detune.value = (Math.random()-.5)*4;
-      const hg = ctx.createGain();
-      hg.gain.setValueAtTime(hv, start);
-      hg.gain.exponentialRampToValueAtTime(hv*.6, start+.01);
-      hg.gain.exponentialRampToValueAtTime(.001, start+dur);
-      o.connect(hg); hg.connect(g);
-      o.start(start); o.stop(start+dur+.05);
-    });
-    g.connect(reverb); g.connect(master);
-  }
-
-  function pad(freqs, start, dur, vol) {
-    if(!ctx||!bgmOn) return;
-    freqs.forEach(freq => {
-      for(let i=0;i<3;i++){
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = 'sine';
-        o.frequency.value = freq;
-        o.detune.value = (i-1)*6;
-        const v = vol/3;
-        g.gain.setValueAtTime(.001, start);
-        g.gain.exponentialRampToValueAtTime(v, start+dur*.3);
-        g.gain.exponentialRampToValueAtTime(v*.7, start+dur*.8);
-        g.gain.exponentialRampToValueAtTime(.001, start+dur);
-        o.connect(g); g.connect(reverb); g.connect(master);
-        o.start(start); o.stop(start+dur+.1);
-      }
-    });
-  }
-
-  function sub(freq, start, dur, vol) {
-    if(!ctx||!bgmOn) return;
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = 'sine';
-    o.frequency.value = freq;
-    g.gain.setValueAtTime(.001, start);
-    g.gain.exponentialRampToValueAtTime(vol, start+.15);
-    g.gain.exponentialRampToValueAtTime(vol*.7, start+dur*.7);
-    g.gain.exponentialRampToValueAtTime(.001, start+dur);
-    o.connect(g); g.connect(master);
-    o.start(start); o.stop(start+dur+.05);
-  }
-
-  function shimmer(freq, start, dur, vol) {
-    if(!ctx||!bgmOn) return;
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = 'sine';
-    o.frequency.value = freq;
-    g.gain.setValueAtTime(.001, start);
-    g.gain.exponentialRampToValueAtTime(vol, start+dur*.4);
-    g.gain.exponentialRampToValueAtTime(.001, start+dur);
-    o.connect(g); g.connect(reverb);
-    o.start(start); o.stop(start+dur+.1);
-  }
-
-  function warmTone(freq, start, dur, vol) {
-    if(!ctx||!bgmOn) return;
-    ['sine','triangle'].forEach((type,idx) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = type;
-      o.frequency.value = freq;
-      o.detune.value = idx * 3;
-      const v = vol * (idx===0 ? .7 : .3);
-      g.gain.setValueAtTime(.001, start);
-      g.gain.exponentialRampToValueAtTime(v, start+.01);
-      g.gain.exponentialRampToValueAtTime(v*.4, start+dur*.6);
-      g.gain.exponentialRampToValueAtTime(.001, start+dur);
-      o.connect(g); g.connect(reverb); g.connect(master);
-      o.start(start); o.stop(start+dur+.05);
-    });
-  }
-
-  function pluck(freq, start, dur, vol) {
-    if(!ctx||!bgmOn) return;
-    const g = ctx.createGain();
-    [1,2,3,4,5].forEach((h,idx) => {
-      const o = ctx.createOscillator();
-      const hv = vol * [1,.5,.25,.12,.06][idx];
-      o.type = idx < 2 ? 'triangle' : 'sine';
-      o.frequency.value = freq * h;
-      const hg = ctx.createGain();
-      hg.gain.setValueAtTime(hv, start);
-      hg.gain.exponentialRampToValueAtTime(.001, start+dur*.6);
-      o.connect(hg); hg.connect(g);
-      o.start(start); o.stop(start+dur+.05);
-    });
-    g.connect(reverb); g.connect(master);
-  }
-
-  function bell(freq, start, dur, vol) {
-    if(!ctx||!bgmOn) return;
-    [1, 2.76, 4.07, 5.15].forEach((ratio, idx) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.value = freq * ratio;
-      const v = vol * [1,.4,.2,.1][idx];
-      g.gain.setValueAtTime(v, start);
-      g.gain.exponentialRampToValueAtTime(.001, start+dur);
-      o.connect(g); g.connect(reverb); g.connect(master);
-      o.start(start); o.stop(start+dur+.1);
-    });
-  }
-
-  /* ════════════════════════════════════════════
-     TRACK DEFINITIONS — 6 unique moods
-     ════════════════════════════════════════════ */
-
-  const TRACKS = {
-
-    /* ── 1. 감성 피아노 (Emotional Piano) ── */
-    emotional: { bpm: 72, schedule(now, B) {
-      const arps = [
-        [['G3','B3','D4','G4','B4','D4'],4],
-        [['C3','E3','G3','C4','E4','G3'],4],
-        [['E3','G3','B3','E4','G4','B3'],4],
-        [['D3','Gb3','A3','D4','Gb4','A3'],4],
-        [['C3','E3','G3','C4','E4','C4'],4],
-        [['G3','B3','D4','G4','B4','G4'],4],
-        [['A3','C4','E4','A4','C4','E4'],4],
-        [['D3','Gb3','A3','D4','A3','Gb3'],4],
-      ];
-      const pds = [[['G3','B3','D4'],8],[['E3','G3','B3'],8],[['C3','E3','G3'],8],[['D3','Gb3','A3'],8]];
-      const bass = [['G2',4],['C3',4],['E2',4],['D2',4],['C2',4],['G2',4],['A2',4],['D2',4]];
-      const mel = [['D5',2],['B4',2],['G4',1],['A4',1],['B4',2],[null,1],['E5',1.5],['D5',1.5],['B4',2],[null,2],['G5',2],['E5',1],['D5',1],['C5',2],['B4',2],[null,1],['A4',1],['B4',2],['D5',2],[null,2]];
-      let t=now;
-      arps.forEach(([notes,beats])=>{const d=beats*B;const g=d/notes.length;notes.forEach((n,i)=>piano(F[n],t+i*g,g*2.5,.18));t+=d;});
-      t=now; pds.forEach(([notes,beats])=>{pad(notes.map(n=>F[n]),t,beats*B*.95,.12);t+=beats*B;});
-      t=now; bass.forEach(([n,beats])=>{sub(F[n],t,beats*B*.9,.2);t+=beats*B;});
-      t=now; mel.forEach(([n,beats])=>{if(n)shimmer(F[n],t,beats*B*.9,.08);t+=beats*B;});
-      return arps.reduce((s,a)=>s+a[1],0)*B;
-    }},
-
-    /* ── 2. 편안한 재즈 (Relaxing Jazz) ── */
-    jazz: { bpm: 90, schedule(now, B) {
-      // Swing feel jazz piano with walking bass
-      const chords = [
-        [['Eb3','G3','Bb3','D4'],4], // EbMaj7
-        [['Ab3','C4','Eb4','G4'],4], // AbMaj7
-        [['Db3','F3','Ab3','C4'],4], // DbMaj7
-        [['G3','B3','D4','F4'],4],   // G7
-        [['C3','E3','G3','Bb3'],4],  // C7
-        [['F3','A3','C4','Eb4'],4],  // F7
-        [['Bb3','D4','F4','A4'],4],  // BbMaj7
-        [['Eb3','G3','Bb3','D4'],4], // EbMaj7
-      ];
-      const walkBass = [
-        ['Eb2',1],['G2',1],['Bb2',1],['D3',1],
-        ['Ab2',1],['C3',1],['Eb3',1],['C3',1],
-        ['Db2',1],['F2',1],['Ab2',1],['C3',1],
-        ['G2',1],['B2',1],['D3',1],['F3',1],
-        ['C2',1],['E2',1],['G2',1],['Bb2',1],
-        ['F2',1],['A2',1],['C3',1],['Eb3',1],
-        ['Bb2',1],['D3',1],['F3',1],['A3',1],
-        ['Eb2',1],['Bb2',1],['G2',1],['Eb2',1],
-      ];
-      const melJazz = [
-        ['Bb4',1.5],['G4',.5],['Eb4',1],['D4',1],
-        ['C4',1.5],['Eb4',.5],['G4',2],
-        ['Ab4',1],['F4',1],[null,1],['Eb4',1],
-        ['D4',2],['B3',1],[null,1],
-        ['C4',1],['E4',1],['G4',1],['Bb4',1],
-        ['A4',1.5],['F4',.5],['C4',2],
-        ['D4',1],['F4',1],['A4',1],['Bb4',1],
-        ['G4',2],[null,2],
-      ];
-      let t=now;
-      // Jazz comping — staccato chord hits with swing
-      chords.forEach(([notes,beats])=>{
-        const d=beats*B;
-        // Hit chord on beat 1 and "and" of 2
-        warmTone(F[notes[0]],t,.8*B,.10);
-        notes.forEach(n=>warmTone(F[n],t,.5*B,.07));
-        notes.forEach(n=>warmTone(F[n],t+1.66*B,.4*B,.06));
-        notes.forEach(n=>warmTone(F[n],t+2.5*B,.5*B,.07));
-        t+=d;
-      });
-      // Walking bass
-      t=now;
-      walkBass.forEach(([n,beats])=>{
-        sub(F[n],t,beats*B*.85,.22);
-        t+=beats*B;
-      });
-      // Jazz melody
-      t=now;
-      melJazz.forEach(([n,beats])=>{
-        if(n) warmTone(F[n],t,beats*B*.8,.12);
-        t+=beats*B;
-      });
-      return chords.reduce((s,a)=>s+a[1],0)*B;
-    }},
-
-    /* ── 3. 희망 오케스트라 (Hopeful Orchestra) ── */
-    orchestra: { bpm: 66, schedule(now, B) {
-      const strings = [
-        [['C3','E3','G3','C4','E4'],8],
-        [['F3','A3','C4','F4','A4'],8],
-        [['G3','B3','D4','G4','B4'],8],
-        [['C3','E3','G3','C4','G4'],8],
-        [['A3','C4','E4','A4','C5'],8],
-        [['F3','A3','C4','F4','A4'],4],
-        [['G3','B3','D4','G4','D5'],4],
-        [['C3','E3','G3','C4','E4'],8],
-      ];
-      const brass = [
-        ['C4',4],[null,4],['E4',2],['F4',2],['G4',4],
-        ['C5',4],['B4',2],['A4',2],['G4',8],
-        ['A4',4],['G4',2],['F4',2],['E4',4],
-        ['F4',2],['G4',2],['C4',8],
-      ];
-      const timpani = [
-        ['C2',2],[null,2],['C2',1],['C2',1],[null,2],
-        ['F2',2],[null,2],['G2',2],[null,2],
-        ['C2',4],[null,4],
-        ['G2',2],['G2',2],['C2',4],[null,4],
-        ['A2',2],[null,2],['F2',4],[null,2],
-        ['G2',2],['G2',1],['G2',1],['C2',4],[null,4],
-      ];
-      let t=now;
-      strings.forEach(([notes,beats])=>{
-        pad(notes.map(n=>F[n]),t,beats*B*.95,.15);
-        t+=beats*B;
-      });
-      t=now;
-      brass.forEach(([n,beats])=>{
-        if(n) tone('sawtooth',F[n],t,beats*B*.85,.04,true);
-        if(n) tone('square',F[n],t,beats*B*.85,.02,true);
-        t+=beats*B;
-      });
-      t=now;
-      timpani.forEach(([n,beats])=>{
-        if(n) sub(F[n],t,beats*B*.7,.25);
-        t+=beats*B;
-      });
-      return strings.reduce((s,a)=>s+a[1],0)*B;
-    }},
-
-    /* ── 4. 차분한 앰비언트 (Calm Ambient) ── */
-    ambient: { bpm: 50, schedule(now, B) {
-      const drones = [
-        [['C3','G3','C4'],16],
-        [['Bb2','F3','Bb3'],16],
-        [['Ab2','Eb3','Ab3'],16],
-        [['Bb2','F3','Bb3'],16],
-      ];
-      const sparkles = [
-        ['C5',3],[null,2],['Eb5',2],['G5',4],[null,3],
-        ['F5',3],[null,1],['Bb4',2],['C5',4],[null,4],
-        ['Ab4',3],[null,2],['Eb5',3],['C5',3],[null,3],
-        ['Bb4',2],[null,2],['F5',4],['D5',3],[null,3],
-      ];
-      const deepBass = [
-        ['C2',16],['Bb1',16],['Ab1',16],['Bb1',16],
-      ];
-      let t=now;
-      drones.forEach(([notes,beats])=>{
-        const freqs = notes.map(n=>F[n]);
-        freqs.forEach(freq=>{
-          for(let i=0;i<4;i++){
-            const o2=ctx.createOscillator();
-            const g2=ctx.createGain();
-            o2.type='sine';
-            o2.frequency.value=freq;
-            o2.detune.value=(i-1.5)*5;
-            const v=.04;
-            g2.gain.setValueAtTime(.001,t);
-            g2.gain.exponentialRampToValueAtTime(v,t+beats*B*.4);
-            g2.gain.exponentialRampToValueAtTime(.001,t+beats*B);
-            o2.connect(g2);g2.connect(reverb);g2.connect(master);
-            o2.start(t);o2.stop(t+beats*B+.2);
-          }
-        });
-        t+=beats*B;
-      });
-      t=now;
-      sparkles.forEach(([n,beats])=>{
-        if(n) bell(F[n],t,beats*B*.9,.04);
-        t+=beats*B;
-      });
-      t=now;
-      deepBass.forEach(([n,beats])=>{
-        sub(F[n],t,beats*B*.95,.15);
-        t+=beats*B;
-      });
-      return drones.reduce((s,a)=>s+a[1],0)*B;
-    }},
-
-    /* ── 5. 경쾌한 어쿠스틱 (Upbeat Acoustic) ── */
-    acoustic: { bpm: 110, schedule(now, B) {
-      const strums = [
-        [['G3','B3','D4','G4'],2],
-        [['G3','B3','D4','G4'],2],
-        [['C3','E3','G3','C4'],2],
-        [['C3','E3','G3','C4'],2],
-        [['E3','G3','B3','E4'],2],
-        [['C3','E3','G3','C4'],2],
-        [['D3','Gb3','A3','D4'],2],
-        [['D3','Gb3','A3','D4'],2],
-        [['G3','B3','D4','G4'],2],
-        [['G3','B3','D4','G4'],2],
-        [['A3','C4','E4','A4'],2],
-        [['A3','C4','E4','A4'],2],
-        [['C3','E3','G3','C4'],2],
-        [['D3','Gb3','A3','D4'],2],
-        [['G3','B3','D4','G4'],2],
-        [['G3','B3','D4','G4'],2],
-      ];
-      const melAc = [
-        ['B4',1],['D5',1],['G5',2],['Gb5',1],['E5',1],['D5',2],
-        ['E5',1],['G5',1],['A5',2],[null,1],['G5',1],['E5',2],
-        ['D5',2],['B4',1],['D5',1],['E5',2],['D5',2],
-        ['B4',1],['A4',1],['G4',2],[null,4],
-      ];
-      const bassAc = [
-        ['G2',2],['G2',2],['C2',2],['C2',2],
-        ['E2',2],['C2',2],['D2',2],['D2',2],
-        ['G2',2],['G2',2],['A2',2],['A2',2],
-        ['C2',2],['D2',2],['G2',2],['G2',2],
-      ];
-      let t=now;
-      strums.forEach(([notes,beats])=>{
-        notes.forEach((n,i)=>{
-          pluck(F[n],t+i*.02,beats*B*.7,.12);
-        });
-        // Upstroke on off-beat
-        if(beats>=2) notes.slice().reverse().forEach((n,i)=>{
-          pluck(F[n],t+B+i*.015,B*.5,.06);
-        });
-        t+=beats*B;
-      });
-      t=now;
-      melAc.forEach(([n,beats])=>{
-        if(n) pluck(F[n],t,beats*B*.8,.15);
-        t+=beats*B;
-      });
-      t=now;
-      bassAc.forEach(([n,beats])=>{
-        sub(F[n],t,beats*B*.85,.18);
-        t+=beats*B;
-      });
-      return strums.reduce((s,a)=>s+a[1],0)*B;
-    }},
-
-    /* ── 6. 뉴에이지 힐링 (New Age Healing) ── */
-    newage: { bpm: 58, schedule(now, B) {
-      const crystalArps = [
-        [['C4','E4','G4','B4','E5','G5'],8],
-        [['A3','C4','E4','A4','C5','E5'],8],
-        [['F3','A3','C4','F4','A4','C5'],8],
-        [['G3','B3','D4','G4','B4','D5'],8],
-        [['E3','G3','B3','E4','G4','B4'],8],
-        [['A3','C4','E4','A4','C5','E5'],8],
-        [['D3','Gb3','A3','D4','Gb4','A4'],8],
-        [['G3','B3','D4','G4','B4','D5'],8],
-      ];
-      const ethPad = [
-        [['C3','G3','B3'],16],
-        [['F3','C4','E4'],16],
-        [['E3','B3','G3'],16],
-        [['G3','D4','B3'],16],
-      ];
-      const bellMel = [
-        ['E5',3],['G5',2],[null,1],['B5',4],['A5',2],
-        ['C5',3],['E5',2],[null,1],['A5',3],[null,3],
-        ['G4',2],['B4',2],['E5',4],[null,2],['D5',2],
-        ['B4',3],['G4',2],[null,1],['D5',4],[null,2],
-      ];
-      let t=now;
-      crystalArps.forEach(([notes,beats])=>{
-        const d=beats*B;
-        const gap=d/notes.length;
-        notes.forEach((n,i)=>{
-          bell(F[n],t+i*gap,gap*3,.05);
-        });
-        t+=d;
-      });
-      t=now;
-      ethPad.forEach(([notes,beats])=>{
-        pad(notes.map(n=>F[n]),t,beats*B*.95,.08);
-        t+=beats*B;
-      });
-      t=now;
-      bellMel.forEach(([n,beats])=>{
-        if(n) bell(F[n],t,beats*B*.85,.06);
-        t+=beats*B;
-      });
-      // Sub drone
-      [['C2',32],['F2',16],['G2',16]].forEach(([n,beats])=>{
-        sub(F[n],t,beats*B*.95,.1);
-        t+=beats*B;
-      });
-      return crystalArps.reduce((s,a)=>s+a[1],0)*B;
-    }},
-  };
-
-  /* ════════════════════════════════════════════
-     PLAYBACK ENGINE
-     ════════════════════════════════════════════ */
-
-  function initAudio() {
-    if(!ctx) {
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
-      master = ctx.createGain();
-      reverb = makeReverb(2.5, 2.5);
-      const reverbGain = ctx.createGain();
-      reverbGain.gain.value = 0.35;
-      reverb.connect(reverbGain);
-      reverbGain.connect(master);
-      master.connect(ctx.destination);
-    }
-    master.gain.value = volRange.value / 100;
-    if(ctx.state === 'suspended') ctx.resume();
-  }
-
-  function scheduleLoop() {
-    if(!ctx || !bgmOn || !currentTrack) return;
-    const track = TRACKS[currentTrack];
-    const B = 60 / track.bpm;
-    const loopDur = track.schedule(ctx.currentTime + 0.08, B);
-    loopId = setTimeout(scheduleLoop, (loopDur - 0.5) * 1000);
-  }
-
-  function startBGM(trackName) {
-    stopBGM(() => {
-      currentTrack = trackName;
-      initAudio();
-      bgmOn = true;
-      btn.classList.add('playing');
-      updateActiveItem();
-      scheduleLoop();
-    });
-  }
-
-  function stopBGM(cb) {
-    bgmOn = false;
+  function stopBGM() {
+    bgm.pause();
+    bgmPlaying = false;
+    currentTrack = null;
     btn.classList.remove('playing');
-    if(loopId) { clearTimeout(loopId); loopId = null; }
-    if(master && ctx) {
-      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-      master.gain.linearRampToValueAtTime(0, ctx.currentTime + .6);
-    }
-    if(ctx) {
-      setTimeout(() => {
-        ctx.close().catch(()=>{});
-        ctx=null; reverb=null; master=null;
-        if(cb) cb();
-      }, 800);
-    } else {
-      currentTrack = null;
-      updateActiveItem();
-      if(cb) cb();
-    }
+    updateActiveItem();
   }
 
   function updateActiveItem() {
     items.forEach(el => {
-      el.classList.toggle('active', el.dataset.track === currentTrack && bgmOn);
+      el.classList.toggle('active', el.dataset.track === currentTrack && bgmPlaying);
     });
   }
 
@@ -1780,10 +1322,8 @@
     el.addEventListener('click', e => {
       e.stopPropagation();
       const track = el.dataset.track;
-      if(bgmOn && currentTrack === track) {
+      if(bgmPlaying && currentTrack === track) {
         stopBGM();
-        currentTrack = null;
-        updateActiveItem();
       } else {
         startBGM(track);
       }
@@ -1798,7 +1338,7 @@
   });
 
   volRange.addEventListener('input', function() {
-    if(master) master.gain.value = this.value / 100;
+    bgm.volume = this.value / 100;
   });
 })();
 </script>
