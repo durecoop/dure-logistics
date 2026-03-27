@@ -505,27 +505,72 @@
   }
   #bgm-btn:hover { background: rgba(255,255,255,.15); }
   #bgm-btn.playing { border-color: rgba(106,191,105,.5); box-shadow: 0 0 12px rgba(106,191,105,.3); }
-  #bgm-vol {
-    position: fixed; top:60px; right:100px;
-    width:38px; height:100px;
+
+  /* ═══ MUSIC SELECTOR PANEL ═══ */
+  #music-panel {
+    position: fixed; top:60px; right:60px;
+    width: 280px; max-height: 480px;
     z-index:9999; display:none;
-    background: rgba(0,0,0,.7); backdrop-filter: blur(8px);
-    border-radius:19px; border: 1px solid rgba(255,255,255,.15);
-    padding: 12px 0;
-    flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(10,10,10,.92); backdrop-filter: blur(16px);
+    border-radius: 16px; border: 1px solid rgba(255,255,255,.12);
+    padding: 16px;
+    flex-direction: column; gap: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    overflow-y: auto;
   }
-  #bgm-vol.show { display:flex; }
-  #bgm-vol input[type=range] {
-    -webkit-appearance: none; appearance: none;
-    width: 70px; height: 4px;
-    background: rgba(255,255,255,.2); border-radius:2px;
-    outline: none;
-    transform: rotate(-90deg);
+  #music-panel.show { display:flex; }
+  #music-panel .panel-title {
+    font-size: .75rem; font-weight: 700; color: rgba(255,255,255,.5);
+    text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 4px;
   }
-  #bgm-vol input[type=range]::-webkit-slider-thumb {
+  .music-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04);
+    cursor: pointer; transition: all .25s;
+  }
+  .music-item:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.15); }
+  .music-item.active { background: rgba(58,125,68,.25); border-color: rgba(106,191,105,.4); }
+  .music-item .mi-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+  .music-item .mi-info { flex:1; min-width:0; }
+  .music-item .mi-name { font-size: .85rem; font-weight: 600; color: #fff; }
+  .music-item .mi-desc { font-size: .68rem; color: rgba(255,255,255,.45); margin-top: 2px; }
+  .music-item .mi-eq {
+    display: flex; align-items: flex-end; gap: 2px; height: 18px;
+    opacity: 0; transition: opacity .3s;
+  }
+  .music-item.active .mi-eq { opacity: 1; }
+  .mi-eq span {
+    width: 3px; background: var(--green-light); border-radius: 2px;
+    animation: eqBar .6s ease-in-out infinite alternate;
+  }
+  .mi-eq span:nth-child(1) { height: 6px; animation-delay: 0s; }
+  .mi-eq span:nth-child(2) { height: 12px; animation-delay: .15s; }
+  .mi-eq span:nth-child(3) { height: 8px; animation-delay: .3s; }
+  .mi-eq span:nth-child(4) { height: 14px; animation-delay: .1s; }
+  @keyframes eqBar { to { height: 4px; } }
+
+  #music-vol-wrap {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 4px 4px; margin-top: 4px;
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  #music-vol-wrap label { font-size: .7rem; color: rgba(255,255,255,.4); }
+  #music-vol-wrap input[type=range] {
     -webkit-appearance: none; appearance: none;
-    width:14px; height:14px; border-radius:50%;
-    background: var(--green-light); cursor:pointer;
+    flex: 1; height: 4px;
+    background: rgba(255,255,255,.15); border-radius: 2px; outline: none;
+  }
+  #music-vol-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--green-light); cursor: pointer;
   }
 </style>
 </head>
@@ -1083,7 +1128,43 @@
 
 <!-- ═══ BGM CONTROL ═══ -->
 <button id="bgm-btn" title="배경음악 ON/OFF">&#9835;</button>
-<div id="bgm-vol"><input type="range" min="0" max="100" value="70" id="bgm-range"></div>
+<div id="music-panel">
+  <div class="panel-title">&#127925; 배경음악 선택</div>
+  <div class="music-item" data-track="emotional">
+    <div class="mi-icon" style="background:rgba(106,191,105,.15);">&#127929;</div>
+    <div class="mi-info"><div class="mi-name">감성 피아노</div><div class="mi-desc">따뜻하고 감동적인 피아노 선율</div></div>
+    <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="music-item" data-track="jazz">
+    <div class="mi-icon" style="background:rgba(255,180,60,.15);">&#127927;</div>
+    <div class="mi-info"><div class="mi-name">편안한 재즈</div><div class="mi-desc">부드러운 재즈 피아노 & 베이스</div></div>
+    <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="music-item" data-track="orchestra">
+    <div class="mi-icon" style="background:rgba(180,100,255,.15);">&#127931;</div>
+    <div class="mi-info"><div class="mi-name">희망 오케스트라</div><div class="mi-desc">웅장하고 희망찬 오케스트라</div></div>
+    <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="music-item" data-track="ambient">
+    <div class="mi-icon" style="background:rgba(80,180,255,.15);">&#127754;</div>
+    <div class="mi-info"><div class="mi-name">차분한 앰비언트</div><div class="mi-desc">명상적이고 고요한 사운드스케이프</div></div>
+    <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="music-item" data-track="acoustic">
+    <div class="mi-icon" style="background:rgba(255,130,100,.15);">&#127928;</div>
+    <div class="mi-info"><div class="mi-name">경쾌한 어쿠스틱</div><div class="mi-desc">밝고 활기찬 기타 멜로디</div></div>
+    <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="music-item" data-track="newage">
+    <div class="mi-icon" style="background:rgba(100,220,200,.15);">&#10024;</div>
+    <div class="mi-info"><div class="mi-name">뉴에이지 힐링</div><div class="mi-desc">크리스탈처럼 맑은 치유 선율</div></div>
+    <div class="mi-eq"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div id="music-vol-wrap">
+    <label>&#128266;</label>
+    <input type="range" min="0" max="100" value="70" id="bgm-range">
+  </div>
+</div>
 
 <!-- ═══ CONTROLS ═══ -->
 <div id="ctrls">
@@ -1170,192 +1251,463 @@
 })();
 </script>
 
-<!-- ═══ BGM ENGINE — Emotional Cinematic ═══ -->
+<!-- ═══ BGM ENGINE — Multi-Track Music Selector ═══ -->
 <script>
 (function(){
   let ctx, master, reverb, bgmOn = false, loopId = null;
+  let currentTrack = null;
   const btn = document.getElementById('bgm-btn');
-  const volPanel = document.getElementById('bgm-vol');
+  const panel = document.getElementById('music-panel');
   const volRange = document.getElementById('bgm-range');
+  const items = document.querySelectorAll('.music-item');
 
-  // Frequencies
+  /* ── Frequency Table ── */
   const F = {};
   'C Db D Eb E F Gb G Ab A Bb B'.split(' ').forEach((n,i) => {
-    for(let o=2;o<=6;o++) F[n+o] = 440 * Math.pow(2, (i-9)/12 + (o-4));
+    for(let o=1;o<=7;o++) F[n+o] = 440 * Math.pow(2, (i-9)/12 + (o-4));
   });
 
-  const BPM = 72;
-  const B = 60/BPM; // beat duration
-
-  // Create convolution reverb
+  /* ── Audio Helpers ── */
   function makeReverb(duration, decay) {
     const len = ctx.sampleRate * duration;
     const buf = ctx.createBuffer(2, len, ctx.sampleRate);
     for(let ch=0;ch<2;ch++){
       const d = buf.getChannelData(ch);
-      for(let i=0;i<len;i++){
-        d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, decay);
-      }
+      for(let i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, decay);
     }
     const conv = ctx.createConvolver();
     conv.buffer = buf;
     return conv;
   }
 
-  // Piano-like tone with harmonics + soft decay
-  function piano(freq, start, dur, vol) {
-    if(!ctx) return;
+  function tone(type, freq, start, dur, vol, useReverb) {
+    if(!ctx||!bgmOn) return;
+    const o = ctx.createOscillator();
     const g = ctx.createGain();
-    // Fundamental + harmonics for warm piano feel
-    [1, 2, 3, 5].forEach((h, idx) => {
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.001, start);
+    g.gain.exponentialRampToValueAtTime(vol, start + 0.02);
+    g.gain.exponentialRampToValueAtTime(vol*0.6, start + dur*0.5);
+    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    o.connect(g);
+    if(useReverb && reverb) g.connect(reverb);
+    g.connect(master);
+    o.start(start); o.stop(start + dur + 0.05);
+  }
+
+  function piano(freq, start, dur, vol) {
+    if(!ctx||!bgmOn) return;
+    const g = ctx.createGain();
+    [1,2,3,5].forEach((h,idx) => {
       const o = ctx.createOscillator();
-      const hGain = vol * [1, 0.3, 0.1, 0.03][idx];
+      const hv = vol * [1,.3,.1,.03][idx];
       o.type = 'sine';
       o.frequency.value = freq * h;
-      // Slight detune for warmth
-      o.detune.value = (Math.random()-0.5) * 4;
+      o.detune.value = (Math.random()-.5)*4;
       const hg = ctx.createGain();
-      hg.gain.setValueAtTime(hGain, start);
-      hg.gain.exponentialRampToValueAtTime(hGain * 0.6, start + 0.01);
-      hg.gain.exponentialRampToValueAtTime(0.001, start + dur);
+      hg.gain.setValueAtTime(hv, start);
+      hg.gain.exponentialRampToValueAtTime(hv*.6, start+.01);
+      hg.gain.exponentialRampToValueAtTime(.001, start+dur);
       o.connect(hg); hg.connect(g);
-      o.start(start); o.stop(start + dur + 0.05);
+      o.start(start); o.stop(start+dur+.05);
     });
     g.connect(reverb); g.connect(master);
   }
 
-  // Warm pad (layered detuned sines)
   function pad(freqs, start, dur, vol) {
-    if(!ctx) return;
+    if(!ctx||!bgmOn) return;
     freqs.forEach(freq => {
       for(let i=0;i<3;i++){
         const o = ctx.createOscillator();
         const g = ctx.createGain();
         o.type = 'sine';
         o.frequency.value = freq;
-        o.detune.value = (i-1) * 6; // spread for chorus
-        const v = vol / 3;
-        g.gain.setValueAtTime(0.001, start);
-        g.gain.exponentialRampToValueAtTime(v, start + dur*0.3);
-        g.gain.exponentialRampToValueAtTime(v * 0.7, start + dur*0.8);
-        g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+        o.detune.value = (i-1)*6;
+        const v = vol/3;
+        g.gain.setValueAtTime(.001, start);
+        g.gain.exponentialRampToValueAtTime(v, start+dur*.3);
+        g.gain.exponentialRampToValueAtTime(v*.7, start+dur*.8);
+        g.gain.exponentialRampToValueAtTime(.001, start+dur);
         o.connect(g); g.connect(reverb); g.connect(master);
-        o.start(start); o.stop(start + dur + 0.1);
+        o.start(start); o.stop(start+dur+.1);
       }
     });
   }
 
-  // Sub bass — deep warm foundation
   function sub(freq, start, dur, vol) {
-    if(!ctx) return;
+    if(!ctx||!bgmOn) return;
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = 'sine';
     o.frequency.value = freq;
-    g.gain.setValueAtTime(0.001, start);
-    g.gain.exponentialRampToValueAtTime(vol, start + 0.15);
-    g.gain.exponentialRampToValueAtTime(vol*0.7, start + dur*0.7);
-    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    g.gain.setValueAtTime(.001, start);
+    g.gain.exponentialRampToValueAtTime(vol, start+.15);
+    g.gain.exponentialRampToValueAtTime(vol*.7, start+dur*.7);
+    g.gain.exponentialRampToValueAtTime(.001, start+dur);
     o.connect(g); g.connect(master);
-    o.start(start); o.stop(start + dur + 0.05);
+    o.start(start); o.stop(start+dur+.05);
   }
 
-  // Gentle shimmering high note
   function shimmer(freq, start, dur, vol) {
-    if(!ctx) return;
+    if(!ctx||!bgmOn) return;
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = 'sine';
     o.frequency.value = freq;
-    g.gain.setValueAtTime(0.001, start);
-    g.gain.exponentialRampToValueAtTime(vol, start + dur*0.4);
-    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
+    g.gain.setValueAtTime(.001, start);
+    g.gain.exponentialRampToValueAtTime(vol, start+dur*.4);
+    g.gain.exponentialRampToValueAtTime(.001, start+dur);
     o.connect(g); g.connect(reverb);
-    o.start(start); o.stop(start + dur + 0.1);
+    o.start(start); o.stop(start+dur+.1);
   }
 
-  /* ── Musical Patterns ── */
+  function warmTone(freq, start, dur, vol) {
+    if(!ctx||!bgmOn) return;
+    ['sine','triangle'].forEach((type,idx) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      o.detune.value = idx * 3;
+      const v = vol * (idx===0 ? .7 : .3);
+      g.gain.setValueAtTime(.001, start);
+      g.gain.exponentialRampToValueAtTime(v, start+.01);
+      g.gain.exponentialRampToValueAtTime(v*.4, start+dur*.6);
+      g.gain.exponentialRampToValueAtTime(.001, start+dur);
+      o.connect(g); g.connect(reverb); g.connect(master);
+      o.start(start); o.stop(start+dur+.05);
+    });
+  }
 
-  // Piano arpeggios — gentle, emotional (G major / Em feel)
-  const arps = [
-    // Section A — hopeful
-    [['G3','B3','D4','G4','B4','D4'], 4],
-    [['C3','E3','G3','C4','E4','G3'], 4],
-    [['E3','G3','B3','E4','G4','B3'], 4],
-    [['D3','Gb3','A3','D4','Gb4','A3'], 4],
-    // Section B — warm resolve
-    [['C3','E3','G3','C4','E4','C4'], 4],
-    [['G3','B3','D4','G4','B4','G4'], 4],
-    [['A3','C4','E4','A4','C4','E4'], 4],
-    [['D3','Gb3','A3','D4','A3','Gb3'], 4],
-  ];
+  function pluck(freq, start, dur, vol) {
+    if(!ctx||!bgmOn) return;
+    const g = ctx.createGain();
+    [1,2,3,4,5].forEach((h,idx) => {
+      const o = ctx.createOscillator();
+      const hv = vol * [1,.5,.25,.12,.06][idx];
+      o.type = idx < 2 ? 'triangle' : 'sine';
+      o.frequency.value = freq * h;
+      const hg = ctx.createGain();
+      hg.gain.setValueAtTime(hv, start);
+      hg.gain.exponentialRampToValueAtTime(.001, start+dur*.6);
+      o.connect(hg); hg.connect(g);
+      o.start(start); o.stop(start+dur+.05);
+    });
+    g.connect(reverb); g.connect(master);
+  }
 
-  // Pad chords — long, warm
-  const pads = [
-    [['G3','B3','D4'], 8],
-    [['E3','G3','B3'], 8],
-    [['C3','E3','G3'], 8],
-    [['D3','Gb3','A3'], 8],
-  ];
+  function bell(freq, start, dur, vol) {
+    if(!ctx||!bgmOn) return;
+    [1, 2.76, 4.07, 5.15].forEach((ratio, idx) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq * ratio;
+      const v = vol * [1,.4,.2,.1][idx];
+      g.gain.setValueAtTime(v, start);
+      g.gain.exponentialRampToValueAtTime(.001, start+dur);
+      o.connect(g); g.connect(reverb); g.connect(master);
+      o.start(start); o.stop(start+dur+.1);
+    });
+  }
 
-  // Bass notes
-  const bassLine = [
-    ['G2',4],['C3',4],['E2',4],['D2',4],
-    ['C2',4],['G2',4],['A2',4],['D2',4],
-  ];
+  /* ════════════════════════════════════════════
+     TRACK DEFINITIONS — 6 unique moods
+     ════════════════════════════════════════════ */
 
-  // High shimmer melody — sparse, emotional
-  const melNotes = [
-    ['D5',2],['B4',2],['G4',1],['A4',1],['B4',2],
-    [null,1],['E5',1.5],['D5',1.5],['B4',2],[null,2],
-    ['G5',2],['E5',1],['D5',1],['C5',2],['B4',2],
-    [null,1],['A4',1],['B4',2],['D5',2],[null,2],
-  ];
+  const TRACKS = {
 
-  function scheduleLoop() {
-    if(!ctx || !bgmOn) return;
-    const now = ctx.currentTime + 0.08;
+    /* ── 1. 감성 피아노 (Emotional Piano) ── */
+    emotional: { bpm: 72, schedule(now, B) {
+      const arps = [
+        [['G3','B3','D4','G4','B4','D4'],4],
+        [['C3','E3','G3','C4','E4','G3'],4],
+        [['E3','G3','B3','E4','G4','B3'],4],
+        [['D3','Gb3','A3','D4','Gb4','A3'],4],
+        [['C3','E3','G3','C4','E4','C4'],4],
+        [['G3','B3','D4','G4','B4','G4'],4],
+        [['A3','C4','E4','A4','C4','E4'],4],
+        [['D3','Gb3','A3','D4','A3','Gb3'],4],
+      ];
+      const pds = [[['G3','B3','D4'],8],[['E3','G3','B3'],8],[['C3','E3','G3'],8],[['D3','Gb3','A3'],8]];
+      const bass = [['G2',4],['C3',4],['E2',4],['D2',4],['C2',4],['G2',4],['A2',4],['D2',4]];
+      const mel = [['D5',2],['B4',2],['G4',1],['A4',1],['B4',2],[null,1],['E5',1.5],['D5',1.5],['B4',2],[null,2],['G5',2],['E5',1],['D5',1],['C5',2],['B4',2],[null,1],['A4',1],['B4',2],['D5',2],[null,2]];
+      let t=now;
+      arps.forEach(([notes,beats])=>{const d=beats*B;const g=d/notes.length;notes.forEach((n,i)=>piano(F[n],t+i*g,g*2.5,.18));t+=d;});
+      t=now; pds.forEach(([notes,beats])=>{pad(notes.map(n=>F[n]),t,beats*B*.95,.12);t+=beats*B;});
+      t=now; bass.forEach(([n,beats])=>{sub(F[n],t,beats*B*.9,.2);t+=beats*B;});
+      t=now; mel.forEach(([n,beats])=>{if(n)shimmer(F[n],t,beats*B*.9,.08);t+=beats*B;});
+      return arps.reduce((s,a)=>s+a[1],0)*B;
+    }},
 
-    // Total loop duration
-    const loopBeats = arps.reduce((s,a)=>s+a[1],0);
-    const loopDur = loopBeats * B;
-
-    // 1. Piano arpeggios
-    let t = now;
-    arps.forEach(([notes, beats]) => {
-      const dur = beats * B;
-      const noteGap = dur / notes.length;
-      notes.forEach((n, i) => {
-        piano(F[n], t + i * noteGap, noteGap * 2.5, 0.18);
+    /* ── 2. 편안한 재즈 (Relaxing Jazz) ── */
+    jazz: { bpm: 90, schedule(now, B) {
+      // Swing feel jazz piano with walking bass
+      const chords = [
+        [['Eb3','G3','Bb3','D4'],4], // EbMaj7
+        [['Ab3','C4','Eb4','G4'],4], // AbMaj7
+        [['Db3','F3','Ab3','C4'],4], // DbMaj7
+        [['G3','B3','D4','F4'],4],   // G7
+        [['C3','E3','G3','Bb3'],4],  // C7
+        [['F3','A3','C4','Eb4'],4],  // F7
+        [['Bb3','D4','F4','A4'],4],  // BbMaj7
+        [['Eb3','G3','Bb3','D4'],4], // EbMaj7
+      ];
+      const walkBass = [
+        ['Eb2',1],['G2',1],['Bb2',1],['D3',1],
+        ['Ab2',1],['C3',1],['Eb3',1],['C3',1],
+        ['Db2',1],['F2',1],['Ab2',1],['C3',1],
+        ['G2',1],['B2',1],['D3',1],['F3',1],
+        ['C2',1],['E2',1],['G2',1],['Bb2',1],
+        ['F2',1],['A2',1],['C3',1],['Eb3',1],
+        ['Bb2',1],['D3',1],['F3',1],['A3',1],
+        ['Eb2',1],['Bb2',1],['G2',1],['Eb2',1],
+      ];
+      const melJazz = [
+        ['Bb4',1.5],['G4',.5],['Eb4',1],['D4',1],
+        ['C4',1.5],['Eb4',.5],['G4',2],
+        ['Ab4',1],['F4',1],[null,1],['Eb4',1],
+        ['D4',2],['B3',1],[null,1],
+        ['C4',1],['E4',1],['G4',1],['Bb4',1],
+        ['A4',1.5],['F4',.5],['C4',2],
+        ['D4',1],['F4',1],['A4',1],['Bb4',1],
+        ['G4',2],[null,2],
+      ];
+      let t=now;
+      // Jazz comping — staccato chord hits with swing
+      chords.forEach(([notes,beats])=>{
+        const d=beats*B;
+        // Hit chord on beat 1 and "and" of 2
+        warmTone(F[notes[0]],t,.8*B,.10);
+        notes.forEach(n=>warmTone(F[n],t,.5*B,.07));
+        notes.forEach(n=>warmTone(F[n],t+1.66*B,.4*B,.06));
+        notes.forEach(n=>warmTone(F[n],t+2.5*B,.5*B,.07));
+        t+=d;
       });
-      t += dur;
-    });
+      // Walking bass
+      t=now;
+      walkBass.forEach(([n,beats])=>{
+        sub(F[n],t,beats*B*.85,.22);
+        t+=beats*B;
+      });
+      // Jazz melody
+      t=now;
+      melJazz.forEach(([n,beats])=>{
+        if(n) warmTone(F[n],t,beats*B*.8,.12);
+        t+=beats*B;
+      });
+      return chords.reduce((s,a)=>s+a[1],0)*B;
+    }},
 
-    // 2. Warm pads
-    t = now;
-    pads.forEach(([notes, beats]) => {
-      pad(notes.map(n=>F[n]), t, beats * B * 0.95, 0.12);
-      t += beats * B;
-    });
+    /* ── 3. 희망 오케스트라 (Hopeful Orchestra) ── */
+    orchestra: { bpm: 66, schedule(now, B) {
+      const strings = [
+        [['C3','E3','G3','C4','E4'],8],
+        [['F3','A3','C4','F4','A4'],8],
+        [['G3','B3','D4','G4','B4'],8],
+        [['C3','E3','G3','C4','G4'],8],
+        [['A3','C4','E4','A4','C5'],8],
+        [['F3','A3','C4','F4','A4'],4],
+        [['G3','B3','D4','G4','D5'],4],
+        [['C3','E3','G3','C4','E4'],8],
+      ];
+      const brass = [
+        ['C4',4],[null,4],['E4',2],['F4',2],['G4',4],
+        ['C5',4],['B4',2],['A4',2],['G4',8],
+        ['A4',4],['G4',2],['F4',2],['E4',4],
+        ['F4',2],['G4',2],['C4',8],
+      ];
+      const timpani = [
+        ['C2',2],[null,2],['C2',1],['C2',1],[null,2],
+        ['F2',2],[null,2],['G2',2],[null,2],
+        ['C2',4],[null,4],
+        ['G2',2],['G2',2],['C2',4],[null,4],
+        ['A2',2],[null,2],['F2',4],[null,2],
+        ['G2',2],['G2',1],['G2',1],['C2',4],[null,4],
+      ];
+      let t=now;
+      strings.forEach(([notes,beats])=>{
+        pad(notes.map(n=>F[n]),t,beats*B*.95,.15);
+        t+=beats*B;
+      });
+      t=now;
+      brass.forEach(([n,beats])=>{
+        if(n) tone('sawtooth',F[n],t,beats*B*.85,.04,true);
+        if(n) tone('square',F[n],t,beats*B*.85,.02,true);
+        t+=beats*B;
+      });
+      t=now;
+      timpani.forEach(([n,beats])=>{
+        if(n) sub(F[n],t,beats*B*.7,.25);
+        t+=beats*B;
+      });
+      return strings.reduce((s,a)=>s+a[1],0)*B;
+    }},
 
-    // 3. Sub bass
-    t = now;
-    bassLine.forEach(([n, beats]) => {
-      sub(F[n], t, beats * B * 0.9, 0.2);
-      t += beats * B;
-    });
+    /* ── 4. 차분한 앰비언트 (Calm Ambient) ── */
+    ambient: { bpm: 50, schedule(now, B) {
+      const drones = [
+        [['C3','G3','C4'],16],
+        [['Bb2','F3','Bb3'],16],
+        [['Ab2','Eb3','Ab3'],16],
+        [['Bb2','F3','Bb3'],16],
+      ];
+      const sparkles = [
+        ['C5',3],[null,2],['Eb5',2],['G5',4],[null,3],
+        ['F5',3],[null,1],['Bb4',2],['C5',4],[null,4],
+        ['Ab4',3],[null,2],['Eb5',3],['C5',3],[null,3],
+        ['Bb4',2],[null,2],['F5',4],['D5',3],[null,3],
+      ];
+      const deepBass = [
+        ['C2',16],['Bb1',16],['Ab1',16],['Bb1',16],
+      ];
+      let t=now;
+      drones.forEach(([notes,beats])=>{
+        const freqs = notes.map(n=>F[n]);
+        freqs.forEach(freq=>{
+          for(let i=0;i<4;i++){
+            const o2=ctx.createOscillator();
+            const g2=ctx.createGain();
+            o2.type='sine';
+            o2.frequency.value=freq;
+            o2.detune.value=(i-1.5)*5;
+            const v=.04;
+            g2.gain.setValueAtTime(.001,t);
+            g2.gain.exponentialRampToValueAtTime(v,t+beats*B*.4);
+            g2.gain.exponentialRampToValueAtTime(.001,t+beats*B);
+            o2.connect(g2);g2.connect(reverb);g2.connect(master);
+            o2.start(t);o2.stop(t+beats*B+.2);
+          }
+        });
+        t+=beats*B;
+      });
+      t=now;
+      sparkles.forEach(([n,beats])=>{
+        if(n) bell(F[n],t,beats*B*.9,.04);
+        t+=beats*B;
+      });
+      t=now;
+      deepBass.forEach(([n,beats])=>{
+        sub(F[n],t,beats*B*.95,.15);
+        t+=beats*B;
+      });
+      return drones.reduce((s,a)=>s+a[1],0)*B;
+    }},
 
-    // 4. Shimmer melody
-    t = now;
-    melNotes.forEach(([n, beats]) => {
-      if(n) shimmer(F[n], t, beats * B * 0.9, 0.08);
-      t += beats * B;
-    });
+    /* ── 5. 경쾌한 어쿠스틱 (Upbeat Acoustic) ── */
+    acoustic: { bpm: 110, schedule(now, B) {
+      const strums = [
+        [['G3','B3','D4','G4'],2],
+        [['G3','B3','D4','G4'],2],
+        [['C3','E3','G3','C4'],2],
+        [['C3','E3','G3','C4'],2],
+        [['E3','G3','B3','E4'],2],
+        [['C3','E3','G3','C4'],2],
+        [['D3','Gb3','A3','D4'],2],
+        [['D3','Gb3','A3','D4'],2],
+        [['G3','B3','D4','G4'],2],
+        [['G3','B3','D4','G4'],2],
+        [['A3','C4','E4','A4'],2],
+        [['A3','C4','E4','A4'],2],
+        [['C3','E3','G3','C4'],2],
+        [['D3','Gb3','A3','D4'],2],
+        [['G3','B3','D4','G4'],2],
+        [['G3','B3','D4','G4'],2],
+      ];
+      const melAc = [
+        ['B4',1],['D5',1],['G5',2],['Gb5',1],['E5',1],['D5',2],
+        ['E5',1],['G5',1],['A5',2],[null,1],['G5',1],['E5',2],
+        ['D5',2],['B4',1],['D5',1],['E5',2],['D5',2],
+        ['B4',1],['A4',1],['G4',2],[null,4],
+      ];
+      const bassAc = [
+        ['G2',2],['G2',2],['C2',2],['C2',2],
+        ['E2',2],['C2',2],['D2',2],['D2',2],
+        ['G2',2],['G2',2],['A2',2],['A2',2],
+        ['C2',2],['D2',2],['G2',2],['G2',2],
+      ];
+      let t=now;
+      strums.forEach(([notes,beats])=>{
+        notes.forEach((n,i)=>{
+          pluck(F[n],t+i*.02,beats*B*.7,.12);
+        });
+        // Upstroke on off-beat
+        if(beats>=2) notes.slice().reverse().forEach((n,i)=>{
+          pluck(F[n],t+B+i*.015,B*.5,.06);
+        });
+        t+=beats*B;
+      });
+      t=now;
+      melAc.forEach(([n,beats])=>{
+        if(n) pluck(F[n],t,beats*B*.8,.15);
+        t+=beats*B;
+      });
+      t=now;
+      bassAc.forEach(([n,beats])=>{
+        sub(F[n],t,beats*B*.85,.18);
+        t+=beats*B;
+      });
+      return strums.reduce((s,a)=>s+a[1],0)*B;
+    }},
 
-    loopId = setTimeout(scheduleLoop, (loopDur - 0.5) * 1000);
-  }
+    /* ── 6. 뉴에이지 힐링 (New Age Healing) ── */
+    newage: { bpm: 58, schedule(now, B) {
+      const crystalArps = [
+        [['C4','E4','G4','B4','E5','G5'],8],
+        [['A3','C4','E4','A4','C5','E5'],8],
+        [['F3','A3','C4','F4','A4','C5'],8],
+        [['G3','B3','D4','G4','B4','D5'],8],
+        [['E3','G3','B3','E4','G4','B4'],8],
+        [['A3','C4','E4','A4','C5','E5'],8],
+        [['D3','Gb3','A3','D4','Gb4','A4'],8],
+        [['G3','B3','D4','G4','B4','D5'],8],
+      ];
+      const ethPad = [
+        [['C3','G3','B3'],16],
+        [['F3','C4','E4'],16],
+        [['E3','B3','G3'],16],
+        [['G3','D4','B3'],16],
+      ];
+      const bellMel = [
+        ['E5',3],['G5',2],[null,1],['B5',4],['A5',2],
+        ['C5',3],['E5',2],[null,1],['A5',3],[null,3],
+        ['G4',2],['B4',2],['E5',4],[null,2],['D5',2],
+        ['B4',3],['G4',2],[null,1],['D5',4],[null,2],
+      ];
+      let t=now;
+      crystalArps.forEach(([notes,beats])=>{
+        const d=beats*B;
+        const gap=d/notes.length;
+        notes.forEach((n,i)=>{
+          bell(F[n],t+i*gap,gap*3,.05);
+        });
+        t+=d;
+      });
+      t=now;
+      ethPad.forEach(([notes,beats])=>{
+        pad(notes.map(n=>F[n]),t,beats*B*.95,.08);
+        t+=beats*B;
+      });
+      t=now;
+      bellMel.forEach(([n,beats])=>{
+        if(n) bell(F[n],t,beats*B*.85,.06);
+        t+=beats*B;
+      });
+      // Sub drone
+      [['C2',32],['F2',16],['G2',16]].forEach(([n,beats])=>{
+        sub(F[n],t,beats*B*.95,.1);
+        t+=beats*B;
+      });
+      return crystalArps.reduce((s,a)=>s+a[1],0)*B;
+    }},
+  };
 
-  function startBGM() {
+  /* ════════════════════════════════════════════
+     PLAYBACK ENGINE
+     ════════════════════════════════════════════ */
+
+  function initAudio() {
     if(!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
       master = ctx.createGain();
@@ -1368,31 +1720,83 @@
     }
     master.gain.value = volRange.value / 100;
     if(ctx.state === 'suspended') ctx.resume();
-    bgmOn = true;
-    btn.classList.add('playing');
-    scheduleLoop();
   }
 
-  function stopBGM() {
+  function scheduleLoop() {
+    if(!ctx || !bgmOn || !currentTrack) return;
+    const track = TRACKS[currentTrack];
+    const B = 60 / track.bpm;
+    const loopDur = track.schedule(ctx.currentTime + 0.08, B);
+    loopId = setTimeout(scheduleLoop, (loopDur - 0.5) * 1000);
+  }
+
+  function startBGM(trackName) {
+    stopBGM(() => {
+      currentTrack = trackName;
+      initAudio();
+      bgmOn = true;
+      btn.classList.add('playing');
+      updateActiveItem();
+      scheduleLoop();
+    });
+  }
+
+  function stopBGM(cb) {
     bgmOn = false;
     btn.classList.remove('playing');
     if(loopId) { clearTimeout(loopId); loopId = null; }
-    if(master) {
+    if(master && ctx) {
       master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-      master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1);
+      master.gain.linearRampToValueAtTime(0, ctx.currentTime + .6);
     }
-    setTimeout(() => { if(ctx){ ctx.close().catch(()=>{}); ctx=null; reverb=null; } }, 1200);
+    if(ctx) {
+      setTimeout(() => {
+        ctx.close().catch(()=>{});
+        ctx=null; reverb=null; master=null;
+        if(cb) cb();
+      }, 800);
+    } else {
+      currentTrack = null;
+      updateActiveItem();
+      if(cb) cb();
+    }
   }
 
+  function updateActiveItem() {
+    items.forEach(el => {
+      el.classList.toggle('active', el.dataset.track === currentTrack && bgmOn);
+    });
+  }
+
+  /* ── UI Events ── */
+  let panelVisible = false;
   btn.addEventListener('click', e => {
     e.stopPropagation();
-    bgmOn ? stopBGM() : startBGM();
+    panelVisible = !panelVisible;
+    panel.classList.toggle('show', panelVisible);
   });
-  btn.addEventListener('mouseenter', () => volPanel.classList.add('show'));
-  volPanel.addEventListener('mouseleave', () => volPanel.classList.remove('show'));
-  btn.addEventListener('mouseleave', () => {
-    if(!volPanel.matches(':hover')) volPanel.classList.remove('show');
+
+  items.forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const track = el.dataset.track;
+      if(bgmOn && currentTrack === track) {
+        stopBGM();
+        currentTrack = null;
+        updateActiveItem();
+      } else {
+        startBGM(track);
+      }
+    });
   });
+
+  document.addEventListener('click', e => {
+    if(!panel.contains(e.target) && e.target !== btn) {
+      panelVisible = false;
+      panel.classList.remove('show');
+    }
+  });
+
   volRange.addEventListener('input', function() {
     if(master) master.gain.value = this.value / 100;
   });
